@@ -1,0 +1,41 @@
+Host www-data
+	HostName 192.168.1.10
+	User www-data
+	Port 666
+
+Host jarvis
+	HostName 192.168.1.10
+	User jarvis
+	Port 666
+
+Host docker
+	HostName 192.168.1.2
+	User docker
+	Port 666
+
+Host grifo-blockchain
+	HostName 46.101.139.236
+	User root
+
+Host grifo-blearning-test
+	HostName 34.251.1.248
+	User ubuntu
+	IdentityFile ~/.ssh/keys/grifo-blearning-test
+
+Host grifo-mentipratiche
+	HostName ec2-54-75-131-102.eu-west-1.compute.amazonaws.com
+	User ubuntu
+	IdentityFile ~/.ssh/keys/grifo-mentipratiche
+
+Host innova
+	HostName 62.170.6.196
+	User root
+	Port 666
+	LocalForward 8880 localhost:80
+	LocalForward 8843 localhost:443
+
+Host tdu
+	HostName 2.226.135.137
+	User amministratore
+	Port 666
+	LocalForward 8880 192.168.1.254:80

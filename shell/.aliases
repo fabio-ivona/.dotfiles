@@ -1,0 +1,28 @@
+# PHP
+alias phpunit="vendor/bin/phpunit"
+alias dusk="php artisan dusk"
+alias artisan="php artisan"
+alias deploy='envoy run deploy'
+alias deploy-code='envoy run deploy-code'
+
+# Misc
+alias hostfile="sudo nano /etc/hosts"
+alias sshconfig="nano ~/.ssh/config"
+alias dock="php dock"
+
+# JavaScript
+alias jest="./node_modules/.bin/jest"
+
+# Git
+alias glog="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+
+# List all files colorized in long format
+alias ll="ls -laF"
+alias l="ls -laF"
+alias la="ls -A"
+
+# IP addresses
+alias ip="curl https://diagnostic.opendns.com/myip ; echo"
+alias localip="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }'"
+
+

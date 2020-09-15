@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# shellcheck disable=SC2046
+# shellcheck disable=SC2086
+
+#install zsh
+echo 'zsh shell installation'
+echo '----------------------'
+
+sudo apt update
+sudo apt install -y zsh powerline fonts-powerline
+sudo usermod -s $(which zsh) $(whoami)
+
+#clone zsh autosuggestions
+git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
+
+#install oh-my-zsh
+rm -rf $HOME/.oh-my-zsh
+curl -L https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sh
+
+
+
+#add global gitignore
+rm $HOME/.global-gitignore
+ln -s $HOME/.dotfiles/shell/.global-gitignore $HOME/.global-gitignore
+git config --global core.excludesfile $HOME/.global-gitignore
+
+
+#link font folder
+rm $HOME/.fonts
+ln -s $HOME/.dotfiles/fonts $HOME/.fonts
+
+
+#link p10k theme config file
+rm $HOME/.p10k.zsh
+ln -s $HOME/.dotfiles/shell/oh-my-zsh/.p10k.zsh $HOME/.p10k.zsh
+
+
+#copy ssh config file
+rm $HOME/.ssh/config
+ln -s $HOME/.dotfiles/shell/ssh/config $HOME/.ssh/config
+
+
+#link zsh preferences
+rm $HOME/.zshrc
+ln -s $HOME/.dotfiles/shell/.zshrc $HOME/.zshrc
+
+
+#install zsh
+echo 'PLEASE REBOOT TO APPLY CHANGES'
+echo '----------------------'

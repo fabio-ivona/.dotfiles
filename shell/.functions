@@ -1,0 +1,10 @@
+# Create a new directory and enter it
+function mkd() {
+   mkdir -p "$@" && cd "$@"
+}
+
+
+# archive file command
+archive () {
+   zip -r "$1".zip -i "$1" ;
+}
