@@ -27,26 +27,21 @@ plugins=(git composer)
 source $ZSH/oh-my-zsh.sh
 
 # Load the shell dotfiles, and then some:
-# * ~/.extra can be used for other settings you don’t want to commit.
 for file in ~/.dotfiles/shell/.{exports,aliases,functions}; do
 	[ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 
+# Load local shell dotfiles that would not be put under VCS
 for file in ~/.dotfiles-custom/shell/.{exports,aliases,functions,zshrc}; do
 	[ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file
 
-
-
 export PATH=$HOME/.dotfiles/bin:$PATH
-[[ -e ~/.phpbrew/bashrc ]] && source ~/.phpbrew/bashrc
 
 # Import ssh keys in keychain
 ssh-add -A 2>/dev/null;
 
-# Setup xdebug
-export XDEBUG_CONFIG="idekey=VSCODE"
 
 # Enable autosuggestions
 source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh

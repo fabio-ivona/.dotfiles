@@ -9,5 +9,3 @@ export HISTIGNORE="ls:cd:cd -:pwd:exit:date:* --help"
 # And include the parameter for ZSH
 export HISTORY_IGNORE="(ls|l|ll|cd|cd -|pwd|exit|date|* --help)"
 
-# Colored grep
-export GREP_OPTIONS="--color=auto"

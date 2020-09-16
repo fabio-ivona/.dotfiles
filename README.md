@@ -47,7 +47,77 @@ bash bootstrap
 <details>
    <summary><strong>Personal .ssh/config file</strong></summary>
    
-   a new ssh config file will be created, containing (and keeping track) of my personal ssh configurations
+   during the installation process, the user is asked for his ssh config git repository, in order to clone it in the user ~/.dotfiles/shell/ssh/config folder and add a link to it from ~/.ssh/config
+  
+   this will allow the user to keep track of his personal ssh configurations
+
+</details>
+
+
+<details>
+   <summary><strong>Tools</strong></summary>
+   
+   dotfiles will add its ~/.dotfiles/bin folder to PATH global variable, in order to add these scripts to the system toolbox:
+   
+   - [no scripts defined yet, will be added soon]
+
+</details>
+
+
+
+<details>
+   <summary><strong>Commands</strong></summary>
+   
+   a number of aliases will be defined for the zsh shell:
+   
+   ###### PHP
+  
+   - `phpunit` executes phpunit tests from current directory (phpunit must be present composer.json file)
+   - `dusk` executes dusk tests from current directory (dusk must be present composer.json file)
+   - `artisan` executes artisan commands without the need to type *php artisan*
+   - `deploy` executes laravel envoy deployment (*envoy run deploy*)
+   - `deploy-code` executes laravel envoy deployment (*envoy run deploy-code*)
+   
+   ###### Misc
+   - `sudo` allows to call sudo before aliases
+   - `phpstorm` opens a PhpStorm project in current folder
+   - `hostfile` opens a text editor for */etc/hosts* file 
+   - `sshconfig` opens a text editor for *~/.ssh/config* file 
+   - `dock` runs a *php dock* command (for dock info, see its [documentation](https://gitlab.com/defstudio/dock)) 
+   
+   ###### Git
+   - `glog` show current project's git commits log in a readable way
+   
+   ###### Tools
+   - `ll` shortcut for *ls -lF*
+   - `l` shortcut for *ls -lF*
+   - `la` shortcut for *ls -lFA*
+   - `publicip` shows current public IP
+   - `localip` shows current local IPs
+   - `mkd` creates a folder and move into it
+   - `archive` create a zip archive of a folder
+   
+
+</details>
+
+
+<details>
+   <summary><strong>Custom local dotfiles</strong></summary>
+   
+   along with default dotfiles (.aliases, .functions, .exports), user may add a ~/.dotfiles-custom/shell directory with additional .exports, .aliases, .functions, .zshrc files that will bel loaded after the default ones   
+   
+   these files will not be put under VCS
+
+</details>
+
+
+
+<details>
+   <summary><strong>Custom local dotfiles</strong></summary>
+   
+   along with default dotfiles (.aliases, .functions, .exports), user may add a ~/.dotfiles-custom/shell directory with additional .exports, .aliases, .functions, .zshrc files that will bel loaded after the default ones   
+   
+   these files will not be put under VCS
 
 </details>
 
