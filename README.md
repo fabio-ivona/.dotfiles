@@ -55,11 +55,25 @@ bash bootstrap
 
 
 <details>
-   <summary><strong>Tools</strong></summary>
+   <summary><strong>Extra</strong></summary>
    
-   dotfiles will add its ~/.dotfiles/bin folder to PATH global variable, in order to add these scripts to the system toolbox:
+   dotfiles adds some extra system configuration:
    
-   - [no scripts defined yet, will be added soon]
+   - larger bash history (32768 entries)
+   - larger bash history file size (32768 entries)
+   - lgnores duplicate commands in bash history
+   - ignores commands which start with a space in bash history
+   - ignores frequent commands both in history and in history file
+      - ll
+      - l
+      - la
+      - ls
+      - cd
+      - cd -
+      - pwd
+      - exit
+      - date
+      - --help commands
 
 </details>
 
@@ -68,7 +82,7 @@ bash bootstrap
 <details>
    <summary><strong>Commands</strong></summary>
    
-   a number of aliases will be defined for the zsh shell:
+   a number of aliases and functions will be defined for the zsh shell:
    
    ###### PHP
   

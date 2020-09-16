@@ -1,11 +1,11 @@
 # Larger bash history (allow 32³ entries; default is 500)
 export HISTSIZE=32768
 export HISTFILESIZE=$HISTSIZE
-export HISTCONTROL=ignoredups
+export HISTCONTROL=ignoreboth
 
 # Make some commands not show up in history
-export HISTIGNORE="ls:cd:cd -:pwd:exit:date:* --help"
+export HISTIGNORE="ll:l:la:ls:cd:cd -:pwd:exit:date:* --help"
 
 # And include the parameter for ZSH
-export HISTORY_IGNORE="(ls|l|ll|cd|cd -|pwd|exit|date|* --help)"
+export HISTORY_IGNORE="(ll|l|la|ls|cd|cd -|pwd|exit|date|* --help)"
 
