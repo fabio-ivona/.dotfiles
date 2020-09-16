@@ -5,6 +5,9 @@ alias artisan="php artisan"
 alias deploy='envoy run deploy'
 alias deploy-code='envoy run deploy-code'
 
+# PhpStorm
+alias phpstorm="nohup phpstorm . &"
+
 # Misc
 alias hostfile="sudo nano /etc/hosts"
 alias sshconfig="nano ~/.ssh/config"
