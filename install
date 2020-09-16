@@ -4,48 +4,98 @@
 # shellcheck disable=SC2086
 
 #install zsh
+echo ''
+echo ''
 echo 'zsh shell installation'
 echo '----------------------'
-
 sudo apt update
 sudo apt install -y zsh powerline fonts-powerline
 sudo usermod -s $(which zsh) $(whoami)
-
-#clone zsh autosuggestions
-git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
-
-#install oh-my-zsh
-rm -rf $HOME/.oh-my-zsh
-curl -L https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sh
-
-
-
-#add global gitignore
-rm $HOME/.global-gitignore
-ln -s $HOME/.dotfiles/shell/.global-gitignore $HOME/.global-gitignore
-git config --global core.excludesfile $HOME/.global-gitignore
-
-
-#link font folder
-rm $HOME/.fonts
-ln -s $HOME/.dotfiles/fonts $HOME/.fonts
-
-
-#link p10k theme config file
-rm $HOME/.p10k.zsh
-ln -s $HOME/.dotfiles/shell/oh-my-zsh/.p10k.zsh $HOME/.p10k.zsh
-
-
-#copy ssh config file
-rm $HOME/.ssh/config
-ln -s $HOME/.dotfiles/shell/ssh/config $HOME/.ssh/config
+echo '---> DONE'
 
 
 #link zsh preferences
-rm $HOME/.zshrc
+echo ''
+echo ''
+echo 'zshrc customization'
+echo '----------------------'
+rm -f $HOME/.zshrc
 ln -s $HOME/.dotfiles/shell/.zshrc $HOME/.zshrc
+echo '---> DONE'
 
 
-#install zsh
+
+#clone zsh autosuggestions
+echo ''
+echo ''
+echo 'zsh autosuggestions installation'
+echo '----------------------'
+git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
+echo '---> DONE'
+
+#install oh-my-zsh
+echo ''
+echo ''
+echo 'zsh oh-my-zsh installation'
+echo '----------------------'
+rm -rf $HOME/.oh-my-zsh
+curl -L https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sh
+echo '---> DONE'
+
+
+#link p10k theme config file
+echo ''
+echo ''
+echo 'p10k theme customization'
+echo '----------------------'
+rm -f $HOME/.p10k.zsh
+ln -s $HOME/.dotfiles/shell/oh-my-zsh/.p10k.zsh $HOME/.p10k.zsh
+echo '---> DONE'
+
+
+#add global gitignore
+echo ''
+echo ''
+echo 'global gitignore setup'
+echo '----------------------'
+rm -f $HOME/.global-gitignore
+ln -s $HOME/.dotfiles/shell/.global-gitignore $HOME/.global-gitignore
+git config --global core.excludesfile $HOME/.global-gitignore
+echo '---> DONE'
+
+
+#link font folder
+echo ''
+echo ''
+echo 'custom fonts setup'
+echo '----------------------'
+rm -f $HOME/.fonts
+ln -s $HOME/.dotfiles/fonts $HOME/.fonts
+echo '---> DONE'
+
+
+#copy ssh config file
+echo ''
+echo ''
+echo 'SSH config import'
+echo '----------------------'
+echo 'Enter your ssh/config repository'
+read -rp 'git ssh or https url (leave blank to skip): ' config_git
+if [ -n "$config_git" ]
+then
+  git clone $config_git $HOME/.dotfiles/shell/ssh/config
+  rm -f $HOME/.ssh/config
+  ln -s $HOME/.dotfiles/shell/ssh/config/config $HOME/.ssh/config
+  echo '---> DONE'
+fi
+
+
+
+
+
+
+
+
+
 echo 'PLEASE REBOOT TO APPLY CHANGES'
 echo '----------------------'
