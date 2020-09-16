@@ -1,17 +1,19 @@
-#PhpStorm
-.idea
 
-#Node
+# Node
 node_modules
 node_modules
 npm-debug.log
 yarn-error.log
 
-#Composer
+# Composer
 vendor
 
-#Laravel
+# Php
+.idea
 .env
-
-#Wordpress
 wp-config.php
+error.log
+access.log
+
+# Others
+nohup.out
