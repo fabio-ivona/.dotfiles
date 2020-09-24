@@ -14,15 +14,6 @@ sudo usermod -s $(which zsh) $(whoami)
 echo '---> DONE'
 
 
-#link zsh preferences
-echo ''
-echo ''
-echo 'zshrc customization'
-echo '----------------------'
-rm -f $HOME/.zshrc
-ln -s $HOME/.dotfiles/shell/.zshrc $HOME/.zshrc
-echo '---> DONE'
-
 
 
 #clone zsh autosuggestions
@@ -51,6 +42,21 @@ echo '----------------------'
 rm -f $HOME/.p10k.zsh
 ln -s $HOME/.dotfiles/shell/oh-my-zsh/.p10k.zsh $HOME/.p10k.zsh
 echo '---> DONE'
+
+
+
+
+#link zsh preferences
+echo ''
+echo ''
+echo 'zshrc customization'
+echo '----------------------'
+rm -f $HOME/.zshrc
+ln -s $HOME/.dotfiles/shell/.zshrc $HOME/.zshrc
+echo '---> DONE'
+
+
+
 
 
 #add global gitignore
