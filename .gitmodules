@@ -1,3 +1,6 @@
 [submodule "misc/oh-my-zsh-custom/themes/powerlevel10k"]
 	path = misc/oh-my-zsh-custom/themes/powerlevel10k
 	url = https://github.com/romkatv/powerlevel10k.git
+[submodule "misc/oh-my-zsh-custom/themes/dracula"]
+	path = misc/oh-my-zsh-custom/themes/dracula
+	url = https://github.com/dracula/zsh.git
