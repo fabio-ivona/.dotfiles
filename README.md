@@ -127,11 +127,13 @@ bash bootstrap
 
 
 <details>
-   <summary><strong>Custom local dotfiles</strong></summary>
+   <summary><strong>PhpStorm URL Handler</strong></summary>
    
-   along with default dotfiles (.aliases, .functions, .exports), user may add a ~/.dotfiles-custom/shell directory with additional .exports, .aliases, .functions, .zshrc files that will bel loaded after the default ones   
-   
-   these files will not be put under VCS
+   dotfiles creates a .desktop entry to handle phpstorm://open?file=xxx links.
+
+   NOTE: Laravel Ignition links may not work in a dockerized development environment. In this case, the local path should be mapped in Laravel's configuration. This can be done locally in .env file by adding this entry:
+
+    IGNITION_LOCAL_SITES_PATH=/home/projects/example/src
 
 </details>
 

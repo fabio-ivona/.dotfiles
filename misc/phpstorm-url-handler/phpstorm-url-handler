@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+arg=${1}
+pattern=".*file(:\/\/|\=)(.*)&line=(.*)"
+
+# Get the file path.
+file=$(echo "${arg}" | sed -r "s/${pattern}/\2/" | sed -r "s/\%2F/\//g")
+
+# Get the line number.
+line=$(echo "${arg}" | sed -r "s/${pattern}/\3/")
+
+# Check if phpstorm|pstorm command exist.
+if type phpstorm > /dev/null; then
+    /usr/bin/env phpstorm --line "${line}" "${file}"
+elif type pstorm > /dev/null; then
+    /usr/bin/env pstorm --line "${line}" "${file}"
+fi

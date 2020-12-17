@@ -97,7 +97,13 @@ fi
 
 
 
-
+#link font folder
+echo ''
+echo ''
+echo 'PhpStorm URL Handler installation'
+echo '----------------------'
+source $HOME/.dotfiles/misc/phpstorm-url-handler/install.sh
+echo '---> DONE'
 
 
 
