@@ -8,6 +8,9 @@ alias deploy-code='envoy run deploy-code'
 # PhpStorm
 alias phpstorm="nohup phpstorm . &"
 
+# Dock
+alias dock="php dock"
+
 # Misc
 alias hostfile="sudo nano /etc/hosts"
 alias sshconfig="nano ~/.ssh/config"
