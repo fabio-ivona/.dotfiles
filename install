@@ -163,6 +163,20 @@ echo '---> DONE'
 
 
 
+#Android Studio installation
+read -p 'Install Android Studio ? (y/N): ' reply
+if [[ "$reply" =~ ^[Yy]$ ]]
+then
+	echo ''
+	echo ''
+	echo 'Android Studio installation'
+	sudo snap install android-studio --classic
+	echo '----------------------'
+	echo '---> DONE'
+fi
+
+
+
 
 #Docker installation
 read -p 'Install Docker ? (y/N): ' reply
@@ -196,6 +210,18 @@ then
 fi
 
 
+
+#npm installation
+read -p 'Install npm? (y/N): ' reply
+if [[ "$reply" =~ ^[Yy]$ ]]
+then
+	echo ''
+	echo ''
+	echo 'npm installation'
+	sudo apt install -y npm
+	echo '----------------------'
+	echo '---> DONE'
+fi
 
 
 
