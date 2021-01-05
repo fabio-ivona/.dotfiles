@@ -154,8 +154,8 @@ fi
 #Tools installation
 echo ''
 echo ''
-echo 'Tools installation (Thunderbird, Telegram, Whatsapp, Libreoffice)'
-sudo apt install -y thunderbird telegram-desktop libreoffice
+echo 'Tools installation (Thunderbird, Telegram, Whatsapp, Libreoffice, htop)'
+sudo apt install -y thunderbird telegram-desktop libreoffice htop
 sudo snap install whatsdesk
 echo '----------------------'
 echo '---> DONE'
