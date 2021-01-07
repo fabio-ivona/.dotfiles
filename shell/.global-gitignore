@@ -8,7 +8,6 @@ yarn-error.log
 vendor
 
 # Php
-.idea
 .env
 wp-config.php
 error.log
