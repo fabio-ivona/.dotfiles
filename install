@@ -64,7 +64,6 @@ echo '---> DONE'
 
 
 
-
 #add global gitignore
 echo ''
 echo ''
@@ -162,6 +161,39 @@ echo '---> DONE'
 
 
 
+#Espanso installation
+read -p 'Install Espanso ? (y/N): ' reply
+if [[ "$reply" =~ ^[Yy]$ ]]
+then
+	echo ''
+	echo ''
+	echo 'Espanso installation'
+	sudo apt install -y xclip
+  sudo snap install espanso --classic
+  espanso start
+	echo '----------------------'
+	echo '---> DONE'
+fi
+
+
+
+#Import Espanso config
+echo ''
+echo ''
+echo 'Espanso config import'
+echo '----------------------'
+echo 'Enter your espanso/config repository'
+read -rp 'git ssh or https url (leave blank to skip): ' config_espanso
+if [ -n "$config_espanso" ]
+then
+  git clone $config_espanso $HOME/.dotfiles/shell/espanso/config
+  rm -rf $HOME/.config/espanso
+  ln -s $HOME/.dotfiles/shell/espanso/config $HOME/.config/espanso
+  espanso restart
+  echo '---> DONE'
+fi
+
+
 
 #Android Studio installation
 read -p 'Install Android Studio ? (y/N): ' reply
@@ -198,13 +230,13 @@ fi
 
 
 #PHP installation
-read -p 'Install PHP 7.4 and Composer? (y/N): ' reply
+read -p 'Install PHP 8 and Composer? (y/N): ' reply
 if [[ "$reply" =~ ^[Yy]$ ]]
 then
 	echo ''
 	echo ''
-	echo 'PHP 7.4 and Composer installation'
-	sudo apt install -y software-properties-common && sudo add-apt-repository ppa:ondrej/php && sudo apt update && sudo apt install -y php7.4-cli php7.4-xml php7.4-mbstring  php7.4-intl && curl -sS https://getcomposer.org/installer -o composer-setup.php && sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+	echo 'PHP 8 and Composer installation'
+	sudo apt install -y software-properties-common && sudo add-apt-repository ppa:ondrej/php && sudo apt update && sudo apt install -y php8.0-cli php8.0-xml ph8.0-mbstring  php8.0-intl && curl -sS https://getcomposer.org/installer -o composer-setup.php && sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
 	echo '----------------------'
 	echo '---> DONE'
 fi

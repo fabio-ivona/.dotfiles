@@ -4,7 +4,7 @@
 
 ```shell
 cd ~
-git clone --recursive git@gitlab.com:fabio.ivona/.dotfiles.git 
+git clone --recursive git@github.com:fabio-ivona/.dotfiles.git 
 cd .dotfiles
 bash bootstrap
 ```
@@ -97,7 +97,7 @@ bash bootstrap
    - `phpstorm` opens a PhpStorm project in current folder
    - `hostfile` opens a text editor for */etc/hosts* file 
    - `sshconfig` opens a text editor for *~/.ssh/config* file 
-   - `dock` runs a *php dock* command (for dock info, see its [documentation](https://gitlab.com/defstudio/dock)) 
+   - `dock` runs a *php dock* command (for dock info, see its [documentation](https://github.com/def-studio/dock)) 
    
    ###### Git
    - `glog` show current project's git commits log in a readable way
