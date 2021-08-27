@@ -173,25 +173,28 @@ then
   espanso start
 	echo '----------------------'
 	echo '---> DONE'
+	
+	
+	
+	
+	#Import Espanso config
+	echo ''
+	echo ''
+	echo 'Espanso config import'
+	echo '----------------------'
+	echo 'Enter your espanso/config repository'
+	read -rp 'git ssh or https url (leave blank to skip): ' config_espanso
+	if [ -n "$config_espanso" ]
+	then
+	  git clone $config_espanso $HOME/.dotfiles/shell/espanso/config
+	  rm -rf $HOME/.config/espanso
+	  ln -s $HOME/.dotfiles/shell/espanso/config $HOME/.config/espanso
+	  espanso restart
+	  echo '---> DONE'
+	fi
 fi
 
 
-
-#Import Espanso config
-echo ''
-echo ''
-echo 'Espanso config import'
-echo '----------------------'
-echo 'Enter your espanso/config repository'
-read -rp 'git ssh or https url (leave blank to skip): ' config_espanso
-if [ -n "$config_espanso" ]
-then
-  git clone $config_espanso $HOME/.dotfiles/shell/espanso/config
-  rm -rf $HOME/.config/espanso
-  ln -s $HOME/.dotfiles/shell/espanso/config $HOME/.config/espanso
-  espanso restart
-  echo '---> DONE'
-fi
 
 
 
