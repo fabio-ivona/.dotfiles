@@ -1,9 +1,8 @@
 # PHP
 alias phpunit="vendor/bin/phpunit"
+alias pest="vendor/bin/pest"
 alias dusk="php artisan dusk"
 alias artisan="php artisan"
-alias deploy='envoy run deploy'
-alias deploy-code='envoy run deploy-code'
 
 # PhpStorm
 alias phpstorm="nohup phpstorm . &"
@@ -14,7 +13,6 @@ alias dock="php dock"
 # Misc
 alias hostfile="sudo nano /etc/hosts"
 alias sshconfig="nano ~/.ssh/config"
-alias dock="php dock"
 alias grep="grep --color=auto"
 
 # JavaScript

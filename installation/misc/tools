@@ -1,10 +1,11 @@
 #!/bin/bash
 
-#link font folder
+#Tools installation
 echo ''
 echo ''
-echo 'custom fonts setup'
+echo 'Tools installation (Thunderbird, Telegram, Whatsapp, Libreoffice, htop)'
+sudo apt install -y thunderbird telegram-desktop libreoffice htop
+sudo snap install whatsdesk
 echo '----------------------'
-rm -f $HOME/.fonts
-ln -s $HOME/.dotfiles/fonts $HOME/.fonts
 echo '---> DONE'
+
