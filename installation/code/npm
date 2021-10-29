@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#npm installation
+read -p 'Install npm? (y/N): ' reply
+if [[ "$reply" =~ ^[Yy]$ ]]
+then
+	echo ''
+	echo ''
+	echo 'npm installation'
+	sudo apt install -y npm
+	echo '----------------------'
+	echo '---> DONE'
+fi
+
+
+

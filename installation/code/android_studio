@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#Android Studio installation
+read -pr 'Install Android Studio ? (y/N): ' reply
+if [[ "$reply" =~ ^[Yy]$ ]]
+then
+	echo ''
+	echo ''
+	echo 'Android Studio installation'
+	sudo snap install android-studio --classic
+	echo '----------------------'
+	echo '---> DONE'
+fi
+
+
+

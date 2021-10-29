@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#install oh-my-zsh
+echo ''
+echo ''
+echo 'zsh oh-my-zsh installation'
+echo '----------------------'
+rm -rf $HOME/.oh-my-zsh
+curl -L https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sh
+echo '---> DONE'

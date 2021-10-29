@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo ''
+echo ''
+echo 'zsh shell installation'
+echo '----------------------'
+sudo apt update
+sudo apt install -y zsh powerline fonts-powerline
+sudo usermod -s $(which zsh) $(whoami)
+echo '---> DONE'

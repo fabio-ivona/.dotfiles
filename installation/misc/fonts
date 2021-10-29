@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#link font folder
+echo ''
+echo ''
+echo 'custom fonts setup'
+echo '----------------------'
+rm -f $HOME/.fonts
+ln -s $HOME/.dotfiles/fonts $HOME/.fonts
+echo '---> DONE'

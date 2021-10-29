@@ -1,0 +1,20 @@
+#!/bin/bash
+
+
+source ~/.dotfiles/installation/zsh/install
+
+source ~/.dotfiles/installation/misc/global_gitignore
+source ~/.dotfiles/installation/misc/fonts
+source ~/.dotfiles/installation/misc/ssh
+source ~/.dotfiles/installation/misc/tools
+source ~/.dotfiles/installation/misc/albert
+
+source ~/.dotfiles/installation/code/php
+source ~/.dotfiles/installation/code/npm
+source ~/.dotfiles/installation/code/docker
+source ~/.dotfiles/installation/code/phpstorm
+source ~/.dotfiles/installation/code/sublime
+source ~/.dotfiles/installation/code/android_studio
+
+echo 'PLEASE REBOOT TO APPLY CHANGES'
+echo '----------------------'

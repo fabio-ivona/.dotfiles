@@ -1,0 +1,7 @@
+#!/bin/bash
+
+source ~/.dotfiles/installation/zsh/main_package
+source ~/.dotfiles/installation/zsh/autosuggestions
+source ~/.dotfiles/installation/zsh/oh_my_zsh
+source ~/.dotfiles/installation/zsh/p10k
+source ~/.dotfiles/installation/zsh/preferences

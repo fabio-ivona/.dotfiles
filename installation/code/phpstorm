@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#PhpStorm installation
+read -pr 'Install PhpStorm? (y/N): ' reply
+if [[ "$reply" =~ ^[Yy]$ ]]
+then
+	echo ''
+	echo ''
+	echo 'PhpStorm installation'
+	sudo snap install phpstorm --classic
+	echo '----------------------'
+	echo '---> DONE'
+
+	#phpstorm url handler
+  echo ''
+  echo ''
+  echo 'PhpStorm URL Handler installation'
+  echo '----------------------'
+  source $HOME/.dotfiles/misc/phpstorm-url-handler/install.sh
+  echo '---> DONE'
+fi
+
+
+

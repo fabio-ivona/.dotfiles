@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#link zsh preferences
+echo ''
+echo ''
+echo 'zshrc customization'
+echo '----------------------'
+rm -f $HOME/.zshrc
+ln -s $HOME/.dotfiles/shell/.zshrc $HOME/.zshrc
+echo '---> DONE'
