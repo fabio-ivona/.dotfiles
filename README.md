@@ -177,6 +177,7 @@ Albert (see [documentation](https://albertlauncher.github.io/)) is a useful laun
    - Whatsdesk
    - Libreoffice
    - htop
+   - copyq
     
 </details>
 
