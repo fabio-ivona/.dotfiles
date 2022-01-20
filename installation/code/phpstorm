@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #PhpStorm installation
-read -pr 'Install PhpStorm? (y/N): ' reply
+read -p 'Install PhpStorm? (y/N): ' reply
 if [[ "$reply" =~ ^[Yy]$ ]]
 then
 	echo ''

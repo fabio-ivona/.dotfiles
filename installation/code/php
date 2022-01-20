@@ -1,13 +1,13 @@
 #!/bin/bash
 
 #PHP installation
-read -pr 'Install PHP 8 and Composer? (y/N): ' reply
+read -p 'Install PHP 8 and Composer? (y/N): ' reply
 if [[ "$reply" =~ ^[Yy]$ ]]
 then
 	echo ''
 	echo ''
 	echo 'PHP 8 and Composer installation'
-	sudo apt install -y software-properties-common && sudo add-apt-repository ppa:ondrej/php && sudo apt update && sudo apt install -y php8.0-cli php8.0-xml ph8.0-mbstring  php8.0-intl && curl -sS https://getcomposer.org/installer -o composer-setup.php && sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+	sudo apt install -y software-properties-common && sudo add-apt-repository ppa:ondrej/php && sudo apt update && sudo apt install -y php8.0-cli php8.0-xml ph8.0-mbstring php8.0-intl && curl -sS https://getcomposer.org/installer -o composer-setup.php && sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
 	echo '----------------------'
 	echo '---> DONE'
 fi

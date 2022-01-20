@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Docker installation
-read -pr 'Install Docker ? (y/N): ' reply
+read -p 'Install Docker ? (y/N): ' reply
 if [[ "$reply" =~ ^[Yy]$ ]]
 then
 	echo ''
