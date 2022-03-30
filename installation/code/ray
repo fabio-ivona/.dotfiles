@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#Spatie Ray installation
+read -p 'Install Ray by spatie ? (y/N): ' reply
+if [[ "$reply" =~ ^[Yy]$ ]]
+then
+	echo ''
+	echo ''
+	echo 'Ray installation'
+
+	wget -O $HOME/.dotfiles/ray/Ray-0.0.AppImage https://spatie.be/products/ray/download/linux/latest
+
+	chmod +x $HOME/.dotfiles/ray/Ray-0.0.AppImage
+	chmod +x $HOME/.dotfiles/ray/ray.sh
+
+  sudo ln -s $HOME/.dotfiles/ray/ray.sh /usr/bin/ray
+
+
+	echo '----------------------'
+	echo '---> DONE'
+fi
+

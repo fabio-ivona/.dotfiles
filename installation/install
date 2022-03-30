@@ -18,6 +18,8 @@ source ~/.dotfiles/installation/code/docker
 source ~/.dotfiles/installation/code/phpstorm
 source ~/.dotfiles/installation/code/sublime
 source ~/.dotfiles/installation/code/android_studio
+source ~/.dotfiles/installation/code/ray
+
 
 echo 'PLEASE REBOOT TO APPLY CHANGES'
 echo '----------------------'
