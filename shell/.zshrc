@@ -14,7 +14,7 @@ ZSH_CUSTOM=$HOME/.dotfiles/misc/oh-my-zsh-custom
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
-ZSH_THEME="dracula/dracula"
+ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # Hide username in prompt
 DEFAULT_USER=`whoami`
@@ -51,3 +51,6 @@ export PATH="$HOME/.config/composer/vendor/bin:$PATH"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# To customize prompt, run `p10k configure` or edit ~/.dotfiles/shell/oh-my-zsh/.p10k.zsh.
+[[ ! -f ~/.dotfiles/shell/oh-my-zsh/.p10k.zsh ]] || source ~/.dotfiles/shell/oh-my-zsh/.p10k.zsh
