@@ -10,7 +10,7 @@ yarn-error.log
 wp-config.php
 error.log
 access.log
-vendor
+
 
 # Others
 .idea
