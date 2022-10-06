@@ -14,6 +14,8 @@ alias dock="php dock"
 alias hostfile="sudo nano /etc/hosts"
 alias sshconfig="nano ~/.ssh/config"
 alias grep="grep --color=auto"
+alias ..="cd .."
+alias ...="cd .. && cd .."
 
 # JavaScript
 alias jest="./node_modules/.bin/jest"
