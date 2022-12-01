@@ -3,19 +3,13 @@ alias phpunit="vendor/bin/phpunit"
 alias pest="vendor/bin/pest"
 alias dusk="php artisan dusk"
 alias artisan="php artisan"
+alias sail="vendor/bin/sail
 
 # PhpStorm
 alias phpstorm="nohup phpstorm . &"
 
 # Dock
 alias dock="php dock"
-
-# Misc
-alias hostfile="sudo nano /etc/hosts"
-alias sshconfig="nano ~/.ssh/config"
-alias grep="grep --color=auto"
-alias ..="cd .."
-alias ...="cd .. && cd .."
 
 # JavaScript
 alias jest="./node_modules/.bin/jest"
@@ -34,3 +28,19 @@ alias localip="ip addr show | grep -o 'inet \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\
 
 # enables sudo aliases
 alias sudo='sudo '
+
+# Misc
+alias hostfile="sudo nano /etc/hosts"
+alias sshconfig="nano ~/.ssh/config"
+alias grep="grep --color=auto"
+alias mv="mv -v"
+alias cp="cp -v"
+alias rm="rm -v"
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias tmp="cd /tmp"
+alias please="sudo"
+alias log="tail -F"
+alias meteo="curl http://wttr.in"
+cpr="rsync -av —progress"
