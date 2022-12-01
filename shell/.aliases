@@ -3,7 +3,7 @@ alias phpunit="vendor/bin/phpunit"
 alias pest="vendor/bin/pest"
 alias dusk="php artisan dusk"
 alias artisan="php artisan"
-alias sail="vendor/bin/sail
+alias sail="vendor/bin/sail"
 
 # PhpStorm
 alias phpstorm="nohup phpstorm . &"
@@ -27,7 +27,7 @@ alias publicip="curl https://diagnostic.opendns.com/myip ; echo"
 alias localip="ip addr show | grep -o 'inet \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet? (addr:)? ?/, \"\"); print }'"
 
 # enables sudo aliases
-alias sudo='sudo '
+alias sudo="sudo "
 
 # Misc
 alias hostfile="sudo nano /etc/hosts"
@@ -42,5 +42,5 @@ alias ....="cd ../../.."
 alias tmp="cd /tmp"
 alias please="sudo"
 alias log="tail -F"
-alias meteo="curl http://wttr.in"
 alias cpr="rsync -av —progress"
+alias meteo="curl http://wttr.in"
