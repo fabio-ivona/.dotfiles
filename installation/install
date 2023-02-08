@@ -6,7 +6,7 @@ sudo apt install curl
 
 source ~/.dotfiles/installation/zsh/install
 
-source ~/.dotfiles/installation/misc/global_gitignore
+source ~/.dotfiles/installation/misc/git
 source ~/.dotfiles/installation/misc/fonts
 source ~/.dotfiles/installation/misc/ssh
 source ~/.dotfiles/installation/misc/tools

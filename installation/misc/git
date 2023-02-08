@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#setup git rerere
+echo ''
+echo ''
+echo 'enable git rerere globally'
+echo '----------------------'
+git config --global rerere.enabled true
+echo '---> DONE'
+
 #add global gitignore
 echo ''
 echo ''
