@@ -4,8 +4,8 @@
 echo ''
 echo ''
 echo 'Tools installation (Thunderbird, Telegram, Whatsapp, Libreoffice, htop, peek)'
-sudo apt install -y thunderbird telegram-desktop libreoffice htop copyq  peek
-sudo snap install whatsdesk
+sudo apt install -y thunderbird telegram-desktop libreoffice htop
+sudo snap install --classic whatsdesk
 echo '----------------------'
 echo '---> DONE'
 
