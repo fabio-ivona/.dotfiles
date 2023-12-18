@@ -12,7 +12,8 @@ alias phpstorm="nohup phpstorm . &"
 alias dock="php dock"
 
 # Vessel
-alias vesse="php vessel"
+alias v="php vessel"
+alias vessel="php vessel"
 
 # JavaScript
 alias jest="./node_modules/.bin/jest"
