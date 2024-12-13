@@ -22,8 +22,8 @@ alias jest="./node_modules/.bin/jest"
 alias glog="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 
 # List all files colorized in long format
-alias ll="ls -lhFA"
-alias l="ls -lhFA"
+alias ll="ls -lhF"
+alias l="ls -lhF"
 alias la="ls -lhFA"
 
 # IP addresses
