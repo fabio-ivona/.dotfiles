@@ -55,3 +55,14 @@ export PATH=~/.composer/vendor/bin:$PATH
 
 # To customize prompt, run `p10k configure` or edit ~/.dotfiles/shell/oh-my-zsh/.p10k.zsh.
 [[ ! -f ~/.dotfiles/shell/oh-my-zsh/.p10k.zsh ]] || source ~/.dotfiles/shell/oh-my-zsh/.p10k.zsh
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+export PATH=$PATH:/usr/local/go/bin
+export PATH=$PATH:/home/fabio/go/bin
