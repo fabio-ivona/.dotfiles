@@ -6,3 +6,4 @@
 /shell/.local
 /.idea
 
+/shell/ssh/ssh-config/
