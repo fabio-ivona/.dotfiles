@@ -11,12 +11,14 @@ alias phpstorm="nohup phpstorm . &"
 # Dock
 alias dock="php dock"
 
-# Vessel
-alias v="php vessel"
-alias vessel="php vessel"
-
-# JavaScript
-alias jest="./node_modules/.bin/jest"
+# Docker 
+alias aartisan="docker compose run --rm composer php artisan"
+alias ccomposer="docker compose run --rm composer composer"
+alias nnpm="docker compose run --rm node npm" 
+alias llogs="docker compose logs -f -n 0"
+alias pps="docker compose ps"
+alias sstart="docker compose up -d"
+alias sstop="docker compose down"
 
 # Git
 alias glog="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
