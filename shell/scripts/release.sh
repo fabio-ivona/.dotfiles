@@ -25,8 +25,6 @@ Arguments:
                       from git diff (like your Laravel command).
 Options:
   --force             Don't ask confirmation before creating the tag.
-  --message TEXT      Unused for now, kept for compatibility with the Artisan
-                      command signature.
 EOF
 }
 
@@ -52,15 +50,6 @@ while [[ $# -gt 0 ]]; do
     --force)
       FORCE=1
       shift
-      ;;
-    --message=*)
-      MESSAGE="${1#*=}"
-      shift
-      ;;
-    --message)
-      shift
-      MESSAGE="${1:-}"
-      shift || true
       ;;
     -h|--help)
       usage
@@ -91,6 +80,12 @@ fi
 # Directory containing the git repo (equivalent to "cd src" in your PHP code)
 SRC_DIR="${SRC_DIR:-src}"
 GIT_DIR="${GIT_DIR:-$SRC_DIR}"
+
+# Validate GIT_DIR
+if ! git -C "$GIT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  warn "GIT_DIR '$GIT_DIR' is not a git working tree"
+  exit 1
+fi
 
 if [[ -z "${GITHUB_TOKEN:-}" ]]; then
   warn "GITHUB_TOKEN environment variable (or .env entry) is required"
@@ -125,7 +120,7 @@ check_uncommitted_changes() {
   local label="Checking for uncommitted changes";
   info "$label...";
   local status
-  if ! status=$(cd "$SRC_DIR" && git status --porcelain); then
+  if ! status=$(cd "$GIT_DIR" && git status --porcelain); then
     replace_last_line "$label ✖"
     warn "Failed to check for uncommitted changes"
     return 1
@@ -145,7 +140,7 @@ get_repository() {
   local label="Detecting repository"
   info "$label..."
   local url repo
-  if ! url=$(cd "$SRC_DIR" && git config --get remote.origin.url); then
+  if ! url=$(cd "$GIT_DIR" && git config --get remote.origin.url); then
     replace_last_line "$label ⚠"
     warn "Failed to detect repository (git config remote.origin.url)"
     return 1
@@ -229,8 +224,8 @@ detect_release_type() {
   info "Detecting release type from git diff since $OLD_TAG..."
 
   local changed
-  git fetch --tags
-  if ! changed=$(cd "$SRC_DIR" && git diff --name-only "$OLD_TAG..HEAD"); then
+  git -C "$GIT_DIR" fetch --tags
+  if ! changed=$(cd "$GIT_DIR" && git diff --name-only "$OLD_TAG..HEAD"); then
     warn "Failed to run git diff for changed files"
     return 1
   fi
@@ -264,7 +259,7 @@ detect_release_type() {
   # Analyse PHP diffs (port of your heuristics)
   for file in "${phpFiles[@]}"; do
     local diff
-    diff=$(cd "$SRC_DIR" && git diff "$OLD_TAG..HEAD" -- "$file") || diff=""
+    diff=$(cd "$GIT_DIR" && git diff "$OLD_TAG..HEAD" -- "$file") || diff=""
 
     local removed=() added=()
     while IFS= read -r line; do
@@ -480,7 +475,7 @@ create_new_tag() {
 
   info "Creating new tag $NEW_TAG and pushing..."
   (
-    cd "$SRC_DIR"
+    cd "$GIT_DIR"
     git tag "$NEW_TAG"
     git push
     git push --tags
@@ -496,7 +491,7 @@ get_changes() {
   local body=""
   local line msg author
 
-  if ! log=$(cd "$SRC_DIR" && git log "$OLD_TAG..HEAD" --pretty='format:%s[####]%an'); then
+  if ! log=$(cd "$GIT_DIR" && git log "$OLD_TAG..HEAD" --pretty='format:%s[####]%an'); then
     CHANGES="## What's Changed"$'\n\n'
     CHANGES+="No commits found since $OLD_TAG"$'\n\n'
     CHANGES+="**Full Changelog**: https://github.com/$GITHUB_REPOSITORY/compare/$OLD_TAG...$NEW_TAG"
