@@ -8,3 +8,8 @@ function mkd() {
 archive () {
    zip -r "$1".zip "$1" ;
 }
+
+# issue a new github release
+function release(){
+    "$HOME/.dotfiles/shell/scripts/release.sh";
+}
