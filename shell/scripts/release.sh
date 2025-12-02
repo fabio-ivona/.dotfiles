@@ -10,11 +10,6 @@ set -euo pipefail
 # Parsed CLI options
 TYPE=""       # major|minor|patch
 FORCE=0       # 1 = skip confirmation
-MESSAGE=""    # currently unused, kept for parity
-
-########################################
-# Helpers
-########################################
 
 usage() {
   cat <<EOF
