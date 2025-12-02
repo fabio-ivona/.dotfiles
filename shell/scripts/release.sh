@@ -457,9 +457,9 @@ bump_new_version() {
 
 create_new_tag() {
   if [[ "$FORCE" -ne 1 ]]; then
-    printf 'Are you sure you want to create a new %s %s? [y/N] ' "$TYPE" "$NEW_TAG"
+    printf 'Are you sure you want to create a new %s %s? [Y/n] ' "$TYPE" "$NEW_TAG"
     read -r ans
-    case "$ans" in
+    case "${ans:-Y}" in
       y|Y|yes|YES) ;;
       *)
         info "Aborted."
