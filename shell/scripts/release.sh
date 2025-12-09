@@ -510,7 +510,7 @@ get_changes() {
 
     body+=$'- '
     body+="$msg"
-    body+=" *by $author*"$'\n'
+    body+=" _by $author_"$'\n'
   done <<<"$log"
 
   CHANGES="## What's Changed"$'\n\n'
