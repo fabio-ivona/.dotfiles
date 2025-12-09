@@ -73,12 +73,12 @@ else
 fi
 
 # Directory containing the git repo (equivalent to "cd src" in your PHP code)
-SRC_DIR="${SRC_DIR:-src}"
-GIT_DIR="${GIT_DIR:-$SRC_DIR}"
+RELEASER_BASE_DIR="${RELEASER_BASE_DIR:-laravel}"
 
-# Validate GIT_DIR
-if ! git -C "$GIT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  warn "GIT_DIR '$GIT_DIR' is not a git working tree"
+# Validate RELEASER_BASE_DIR
+
+if ! git -C "$RELEASER_BASE_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  warn "RELEASER_BASE_DIR '$RELEASER_BASE_DIR' is not a git working tree"
   exit 1
 fi
 
@@ -115,7 +115,7 @@ check_uncommitted_changes() {
   local label="Checking for uncommitted changes";
   info "$label...";
   local status
-  if ! status=$(cd "$GIT_DIR" && git status --porcelain); then
+  if ! status=$(cd "$RELEASER_BASE_DIR" && git status --porcelain); then
     replace_last_line "$label ✖"
     warn "Failed to check for uncommitted changes"
     return 1
@@ -135,7 +135,7 @@ get_repository() {
   local label="Detecting repository"
   info "$label..."
   local url repo
-  if ! url=$(cd "$GIT_DIR" && git config --get remote.origin.url); then
+  if ! url=$(cd "$RELEASER_BASE_DIR" && git config --get remote.origin.url); then
     replace_last_line "$label ⚠"
     warn "Failed to detect repository (git config remote.origin.url)"
     return 1
@@ -188,27 +188,6 @@ get_current_version() {
   replace_last_line "$label: $OLD_TAG ✔"
 }
 
-get_php_version_from_composer() {
-  # Non-fatal; returns nothing on failure.
-  local path="$SRC_DIR/composer.json"
-  if [[ ! -f "$path" ]]; then
-    warn "composer.json not found at $path"
-    return 0
-  fi
-
-  local constraint
-  constraint=$(jq -r '.require.php // empty' "$path" 2>/dev/null || true)
-
-  if [[ -z "$constraint" || "$constraint" == "null" ]]; then
-    warn "No PHP version specified in composer.json"
-    return 0
-  fi
-
-  if [[ "$constraint" =~ ([0-9]+\.[0-9]+) ]]; then
-    printf '%s\n' "${BASH_REMATCH[1]}"
-  fi
-}
-
 detect_release_type() {
   # If user provided the type, respect it.
   if [[ -n "${TYPE:-}" ]]; then
@@ -219,8 +198,8 @@ detect_release_type() {
   info "Detecting release type from git diff since $OLD_TAG..."
 
   local changed
-  git -C "$GIT_DIR" fetch --tags
-  if ! changed=$(cd "$GIT_DIR" && git diff --name-only "$OLD_TAG..HEAD"); then
+  git -C "$RELEASER_BASE_DIR" fetch --tags
+  if ! changed=$(cd "$RELEASER_BASE_DIR" && git diff --name-only "$OLD_TAG..HEAD"); then
     warn "Failed to run git diff for changed files"
     return 1
   fi
@@ -244,17 +223,13 @@ detect_release_type() {
     if [[ "$file" == "composer.json" || "$file" == "composer.lock" ]]; then composerFiles+=("$file"); fi
   done <<<"$changed"
 
-  local phpVersion
-  phpVersion=$(get_php_version_from_composer || true)
-  phpVersion="${phpVersion:-8.2}"
-  info "🔍 Using PHP $phpVersion for parsing changes from $OLD_TAG"
-
   local major=0 minor=0
 
   # Analyse PHP diffs (port of your heuristics)
   for file in "${phpFiles[@]}"; do
     local diff
-    diff=$(cd "$GIT_DIR" && git diff "$OLD_TAG..HEAD" -- "$file") || diff=""
+    diff=$(cd "$RELEASER_BASE_DIR" && git diff "$OLD_TAG..HEAD" -- "$file") || diff=""
+
 
     local removed=() added=()
     while IFS= read -r line; do
@@ -470,7 +445,7 @@ create_new_tag() {
 
   info "Creating new tag $NEW_TAG and pushing..."
   (
-    cd "$GIT_DIR"
+    cd "$RELEASER_BASE_DIR"
     git tag "$NEW_TAG"
     git push
     git push --tags
@@ -486,7 +461,7 @@ get_changes() {
   local body=""
   local line msg author
 
-  if ! log=$(cd "$GIT_DIR" && git log "$OLD_TAG..HEAD" --pretty='format:%s####%an'); then
+  if ! log=$(cd "$RELEASER_BASE_DIR" && git log "$OLD_TAG..HEAD" --pretty='format:%s####%an'); then
     CHANGES="## What's Changed"$'\n\n'
     CHANGES+="No commits found since $OLD_TAG"$'\n\n'
     CHANGES+="**Full Changelog**: https://github.com/$GITHUB_REPOSITORY/compare/$OLD_TAG...$NEW_TAG"
