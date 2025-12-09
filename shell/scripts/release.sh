@@ -509,8 +509,8 @@ get_changes() {
     [[ "$author" == "dependabot[bot]" ]] && author="dependabot"
 
     body+=$'- '
-    body+="$msg"
-    body+=" _by $author_"$'\n'
+    body+="**$msg**"
+    body+=" by $author"$'\n'
   done <<<"$log"
 
   CHANGES="## What's Changed"$'\n\n'
