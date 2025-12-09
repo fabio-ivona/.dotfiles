@@ -486,7 +486,7 @@ get_changes() {
   local body=""
   local line msg author
 
-  if ! log=$(cd "$GIT_DIR" && git log "$OLD_TAG..HEAD" --pretty='format:%s[####]%an'); then
+  if ! log=$(cd "$GIT_DIR" && git log "$OLD_TAG..HEAD" --pretty='format:%s####%an'); then
     CHANGES="## What's Changed"$'\n\n'
     CHANGES+="No commits found since $OLD_TAG"$'\n\n'
     CHANGES+="**Full Changelog**: https://github.com/$GITHUB_REPOSITORY/compare/$OLD_TAG...$NEW_TAG"
@@ -503,14 +503,15 @@ get_changes() {
   while IFS= read -r line; do
     [[ -z "$line" ]] && continue
 
-    msg="${line%%[####]*}"
-    author="${line##*[####]}"
+    msg="${line%%####*}"
+    author="${line##*####}"
 
     [[ "$author" == "dependabot[bot]" ]] && author="dependabot"
 
     body+=$'- '
     body+="**$msg**"
     body+=" by $author"$'\n'
+
   done <<<"$log"
 
   CHANGES="## What's Changed"$'\n\n'
