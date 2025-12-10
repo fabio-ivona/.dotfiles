@@ -230,7 +230,6 @@ detect_release_type() {
     local diff
     diff=$(cd "$RELEASER_BASE_DIR" && git diff "$OLD_TAG..HEAD" -- "$file") || diff=""
 
-
     local removed=() added=()
     while IFS= read -r line; do
       case "$line" in
@@ -243,16 +242,47 @@ detect_release_type() {
       esac
     done <<<"$diff"
 
+    # Mappa dei metodi con parametri modificati (stesso nome, firma diversa)
+    local -A CHANGED_METHODS=()
+
+    for line in "${removed[@]}"; do
+      method_regex='^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\(([^)]*)\)'
+      # public function name(<params>)
+      if [[ "$line" =~ $method_regex ]]; then
+        local fname="${BASH_REMATCH[1]}"
+        local params_old="${BASH_REMATCH[2]}"
+
+        for a in "${added[@]}"; do
+          new_method_regex="^[[:space:]]*public[[:space:]]+function[[:space:]]+$fname[[:space:]]*\(([^)]*)\)"
+          if [[ "$a" =~ $new_method_regex ]]; then
+            local new_method="${BASH_REMATCH[1]}"
+            local params_new="${BASH_REMATCH[1]}"
+            if [[ "$params_old" != "$params_new" ]]; then
+              CHANGED_METHODS["$fname"]=1
+              info "- changed parameters for $fname → MAJOR [$new_method]"
+              major=1
+            fi
+          fi
+        done
+      fi
+    done
+
     # Added lines
     for line in "${added[@]}"; do
       if grep -Eq '\b(class|interface|trait|enum)[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
         info "- added class/trait/interface/enum → Minor [$line]"
         minor=1
       fi
-      if grep -Eq 'public[[:space:]]+function[[:space:]]+[A-Za-z0-9_]+[[:space:]]*\(' <<<"$line"; then
-        info "- added public method → Minor [$line]"
-        minor=1
+
+      # nuovo metodo pubblico solo se non è un metodo "modificato"
+      if [[ "$line" =~ ^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\( ]]; then
+        local fname="${BASH_REMATCH[1]}"
+        if [[ -z "${CHANGED_METHODS[$fname]:-}" ]]; then
+          info "- added public method → Minor [$line]"
+          minor=1
+        fi
       fi
+
       if grep -Eq 'public[[:space:]]+\$[A-Za-z0-9_]+' <<<"$line"; then
         info "- added public property → Minor [$line]"
         minor=1
@@ -269,60 +299,29 @@ detect_release_type() {
         info "- removed class/trait/interface/enum → MAJOR [$line]"
         major=1
       fi
-      if grep -Eq 'public[[:space:]]+function[[:space:]]+[A-Za-z0-9_]+[[:space:]]*\(' <<<"$line"; then
-        info "- removed public method → MAJOR [$line]"
-        major=1
+
+      # metodo pubblico davvero rimosso solo se non è un metodo "modificato"
+      if [[ "$line" =~ ^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\( ]]; then
+        local fname="${BASH_REMATCH[1]}"
+        if [[ -z "${CHANGED_METHODS[$fname]:-}" ]]; then
+          info "- removed public method → MAJOR [$line]"
+          major=1
+        fi
       fi
 
       # Changed visibility
       if [[ "$line" =~ (public|protected|private)[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+) ]]; then
         local vis1="${BASH_REMATCH[1]}"
-        local fname="${BASH_REMATCH[2]}"
+        local fname_vis="${BASH_REMATCH[2]}"
         for a in "${added[@]}"; do
-          if [[ "$a" =~ (public|protected|private)[[:space:]]+function[[:space:]]+$fname ]]; then
+          if [[ "$a" =~ (public|protected|private)[[:space:]]+function[[:space:]]+$fname_vis ]]; then
             local vis2="${BASH_REMATCH[1]}"
             if [[ "$vis1" != "$vis2" ]]; then
-              info "- visibility changed for $fname → MAJOR [$line]"
+              info "- visibility changed for $fname_vis → MAJOR [$line]"
               major=1
             fi
           fi
         done
-      fi
-
-      # Changed return type
-      local re_params_fn_name='public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\\((.*?)\\)'
-      local re_params_same_name_prefix="public[[:space:]]+function[[:space:]]+"
-
-      if [[ "$line" =~ $re_params_fn_name ]]; then
-        local fname_r="${BASH_REMATCH[1]}"
-        local r1="${BASH_REMATCH[2]}"
-        
-        local re_params_new="${re_params_same_name_prefix}${fname_p}[[:space:]]*\\((.*?)\\)"
-        
-        for a in "${added[@]}"; do
-         if [[ "$a" =~ $re_params_new ]]; then
-            local r2="${BASH_REMATCH[1]}"
-            if [[ "$r1" != "$r2" ]]; then
-              info "- changed return type of $fname_r → MAJOR [$line]"
-              major=1
-            fi
-          fi
-        done
-      fi
-
-      # Changed parameters
-      if [[ "$line" =~ public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\((.*?)\) ]]; then
-       local fname_p="${BASH_REMATCH[1]}"
-       local p1="${BASH_REMATCH[2]}"
-       for a in "${added[@]}"; do
-         if [[ "$a" =~ public[[:space:]]+function[[:space:]]+${fname_p}[[:space:]]*\((.*?)\) ]]; then
-           local p2="${BASH_REMATCH[1]}"
-           if [[ "$p1" != "$p2" ]]; then
-             info "- changed parameters for $fname_p → MAJOR [$line]"
-             major=1
-           fi
-         fi
-       done
       fi
 
       # Removed public property
