@@ -225,123 +225,160 @@ detect_release_type() {
 
   local major=0 minor=0
 
-  # Analyse PHP diffs (port of your heuristics)
-  for file in "${phpFiles[@]}"; do
-    local diff
-    diff=$(cd "$RELEASER_BASE_DIR" && git diff "$OLD_TAG..HEAD" -- "$file") || diff=""
-
-    local removed=() added=()
-    while IFS= read -r line; do
-      case "$line" in
-        -*)
-          removed+=("${line#-}")
-          ;;
-        +*)
-          added+=("${line#+}")
-          ;;
-      esac
-    done <<<"$diff"
-
-    # Mappa dei metodi con parametri modificati (stesso nome, firma diversa)
-    local -A CHANGED_METHODS=()
-
-    for line in "${removed[@]}"; do
-      method_regex='^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\(([^)]*)\)'
+    # Analyse PHP diffs (port of your heuristics)
+    for file in "${phpFiles[@]}"; do
+      local diff
+      diff=$(cd "$RELEASER_BASE_DIR" && git diff "$OLD_TAG..HEAD" -- "$file") || diff=""
+  
+      local removed=() added=()
+      while IFS= read -r line; do
+        case "$line" in
+          -*)
+            removed+=("${line#-}")
+            ;;
+          +*)
+            added+=("${line#+}")
+            ;;
+        esac
+      done <<<"$diff"
+  
+      ########################################
+      # 1) Metodi con firma modificata / identica
+      ########################################
+  
+      # CHANGED_METHODS[fname]=1  → parametri cambiati (firma diversa)
+      # SAME_SIGNATURE_METHODS[fname]=1 → stessa firma (es. solo spazi diversi)
+      declare -A CHANGED_METHODS=()
+      declare -A SAME_SIGNATURE_METHODS=()
+  
       # public function name(<params>)
-      if [[ "$line" =~ $method_regex ]]; then
-        local fname="${BASH_REMATCH[1]}"
-        local params_old="${BASH_REMATCH[2]}"
-
-        for a in "${added[@]}"; do
-          new_method_regex="^[[:space:]]*public[[:space:]]+function[[:space:]]+$fname[[:space:]]*\(([^)]*)\)"
-          if [[ "$a" =~ $new_method_regex ]]; then
-            local new_method="${BASH_REMATCH[1]}"
-            local params_new="${BASH_REMATCH[1]}"
-            if [[ "$params_old" != "$params_new" ]]; then
-              CHANGED_METHODS["$fname"]=1
-              info "- changed parameters for $fname → MAJOR [$new_method]"
-              major=1
+      local re_public_fn='^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\((.*)\)'
+  
+      for line in "${removed[@]}"; do
+        if [[ "$line" =~ $re_public_fn ]]; then
+          local fname="${BASH_REMATCH[1]}"
+          local params_old="${BASH_REMATCH[2]}"
+  
+          # regex per lo stesso metodo nelle righe "aggiunte"
+          local re_same_method
+          printf -v re_same_method \
+            '^[[:space:]]*public[[:space:]]+function[[:space:]]+%s[[:space:]]*\\((.*)\\)' \
+            "$fname"
+  
+          for a in "${added[@]}"; do
+            if [[ "$a" =~ $re_same_method ]]; then
+              local params_new="${BASH_REMATCH[1]}"
+  
+              if [[ "$params_old" != "$params_new" ]]; then
+                # stessa funzione, parametri diversi → MAJOR
+                CHANGED_METHODS["$fname"]=1
+                SAME_SIGNATURE_METHODS["$fname"]=0
+                info "- changed parameters for $fname → MAJOR [$line]"
+                major=1
+              else
+                # stessa funzione, stessi parametri → firma invariata
+                # (es. cambi di indentazione o whitespace)
+                if [[ -z "${CHANGED_METHODS[$fname]:-}" ]]; then
+                  SAME_SIGNATURE_METHODS["$fname"]=1
+                fi
+              fi
             fi
-          fi
-        done
-      fi
-    done
-
-    # Added lines
-    for line in "${added[@]}"; do
-      if grep -Eq '\b(class|interface|trait|enum)[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
-        info "- added class/trait/interface/enum → Minor [$line]"
-        minor=1
-      fi
-
-      # nuovo metodo pubblico solo se non è un metodo "modificato"
-      if [[ "$line" =~ ^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\( ]]; then
-        local fname="${BASH_REMATCH[1]}"
-        if [[ -z "${CHANGED_METHODS[$fname]:-}" ]]; then
-          info "- added public method → Minor [$line]"
+          done
+        fi
+      done
+  
+      ########################################
+      # 2) Added lines
+      ########################################
+      for line in "${added[@]}"; do
+        # nuova classe / trait / interface / enum
+        if grep -Eq '\b(class|interface|trait|enum)[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
+          info "- added class/trait/interface/enum → Minor [$line]"
           minor=1
         fi
-      fi
-
-      if grep -Eq 'public[[:space:]]+\$[A-Za-z0-9_]+' <<<"$line"; then
-        info "- added public property → Minor [$line]"
-        minor=1
-      fi
-      if grep -Eq 'public[[:space:]]+const[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
-        info "- added public constant → Minor [$line]"
-        minor=1
-      fi
-    done
-
-    # Removed / changed lines
-    for line in "${removed[@]}"; do
-      if grep -Eq '\b(class|interface|trait|enum)[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
-        info "- removed class/trait/interface/enum → MAJOR [$line]"
-        major=1
-      fi
-
-      # metodo pubblico davvero rimosso solo se non è un metodo "modificato"
-      if [[ "$line" =~ ^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\( ]]; then
-        local fname="${BASH_REMATCH[1]}"
-        if [[ -z "${CHANGED_METHODS[$fname]:-}" ]]; then
-          info "- removed public method → MAJOR [$line]"
+  
+        # nuovo metodo pubblico:
+        # solo se il metodo NON appare come "modificato" (CHANGED_METHODS)
+        # e NON appare come "uguale" (SAME_SIGNATURE_METHODS)
+        if [[ "$line" =~ ^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\( ]]; then
+          local fname="${BASH_REMATCH[1]}"
+          if [[ -z "${CHANGED_METHODS[$fname]:-}" && -z "${SAME_SIGNATURE_METHODS[$fname]:-}" ]]; then
+            info "- added public method → Minor [$line]"
+            minor=1
+          fi
+        fi
+  
+        # nuova property pubblica
+        if grep -Eq 'public[[:space:]]+\$[A-Za-z0-9_]+' <<<"$line"; then
+          info "- added public property → Minor [$line]"
+          minor=1
+        fi
+  
+        # nuova const pubblica
+        if grep -Eq 'public[[:space:]]+const[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
+          info "- added public constant → Minor [$line]"
+          minor=1
+        fi
+      done
+  
+      ########################################
+      # 3) Removed / changed lines
+      ########################################
+      for line in "${removed[@]}"; do
+        # classe/trait/interface/enum rimossa
+        if grep -Eq '\b(class|interface|trait|enum)[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
+          info "- removed class/trait/interface/enum → MAJOR [$line]"
           major=1
         fi
-      fi
-
-      # Changed visibility
-      if [[ "$line" =~ (public|protected|private)[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+) ]]; then
-        local vis1="${BASH_REMATCH[1]}"
-        local fname_vis="${BASH_REMATCH[2]}"
-        for a in "${added[@]}"; do
-          if [[ "$a" =~ (public|protected|private)[[:space:]]+function[[:space:]]+$fname_vis ]]; then
-            local vis2="${BASH_REMATCH[1]}"
-            if [[ "$vis1" != "$vis2" ]]; then
-              info "- visibility changed for $fname_vis → MAJOR [$line]"
-              major=1
-            fi
+  
+        # metodo pubblico davvero rimosso:
+        # solo se NON è un metodo "modificato" né "invariato"
+        if [[ "$line" =~ ^[[:space:]]*public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\( ]]; then
+          local fname="${BASH_REMATCH[1]}"
+          if [[ -z "${CHANGED_METHODS[$fname]:-}" && -z "${SAME_SIGNATURE_METHODS[$fname]:-}" ]]; then
+            info "- removed public method → MAJOR [$line]"
+            major=1
           fi
-        done
-      fi
-
-      # Removed public property
-      if grep -Eq 'public[[:space:]]+\$[A-Za-z0-9_]+' <<<"$line"; then
-        info "- removed public property → MAJOR [$line]"
-        major=1
-      fi
-      # Removed public const
-      if grep -Eq 'public[[:space:]]+const[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
-        info "- removed public constant → MAJOR [$line]"
-        major=1
+        fi
+  
+        # Changed visibility
+        if [[ "$line" =~ (public|protected|private)[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+) ]]; then
+          local vis1="${BASH_REMATCH[1]}"
+          local fname_vis="${BASH_REMATCH[2]}"
+  
+          for a in "${added[@]}"; do
+            if [[ "$a" =~ (public|protected|private)[[:space:]]+function[[:space:]]+$fname_vis ]]; then
+              local vis2="${BASH_REMATCH[1]}"
+              if [[ "$vis1" != "$vis2" ]]; then
+                info "- visibility changed for $fname_vis → MAJOR [$line]"
+                major=1
+              fi
+            fi
+          done
+        fi
+  
+        # Removed public property
+        if grep -Eq 'public[[:space:]]+\$[A-Za-z0-9_]+' <<<"$line"; then
+          info "- removed public property → MAJOR [$line]"
+          major=1
+        fi
+  
+        # Removed public const
+        if grep -Eq 'public[[:space:]]+const[[:space:]]+[A-Za-z0-9_]+' <<<"$line"; then
+          info "- removed public constant → MAJOR [$line]"
+          major=1
+        fi
+      done
+  
+      ########################################
+      # 4) Heuristic controller Laravel
+      ########################################
+      if [[ "$file" == app/Http/Controllers/* && ( $major -eq 1 || $minor -eq 1 ) ]]; then
+        info "- controller change detected → Minor [$file]"
+        minor=1
       fi
     done
 
-    # Laravel controller heuristic
-    if [[ "$file" == app/Http/Controllers/* && ( $major -eq 1 || $minor -eq 1 ) ]]; then
-      info "- controller change detected → Minor [$file]"
-      minor=1
-    fi
-  done
 
   if ((${#composerFiles[@]} > 0)); then
     info "- composer.json/lock changed → patch"
