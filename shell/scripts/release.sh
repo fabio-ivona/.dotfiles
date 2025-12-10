@@ -312,17 +312,17 @@ detect_release_type() {
 
       # Changed parameters
       if [[ "$line" =~ public[[:space:]]+function[[:space:]]+([A-Za-z0-9_]+)[[:space:]]*\((.*?)\) ]]; then
-        local fname_p="${BASH_REMATCH[1]}"
-        local p1="${BASH_REMATCH[2]}"
-        for a in "${added[@]}"; do
-          if [[ "$a" =~ public[[:space:]]+function[[:space:]]+${fname_p[[:space:]]}*\((.*?)\) ]]; then
-            local p2="${BASH_REMATCH[1]}"
-            if [[ "$p1" != "$p2" ]]; then
-              info "- changed parameters for $fname_p → MAJOR [$line]"
-              major=1
-            fi
-          fi
-        done
+       local fname_p="${BASH_REMATCH[1]}"
+       local p1="${BASH_REMATCH[2]}"
+       for a in "${added[@]}"; do
+         if [[ "$a" =~ public[[:space:]]+function[[:space:]]+${fname_p}[[:space:]]*\((.*?)\) ]]; then
+           local p2="${BASH_REMATCH[1]}"
+           if [[ "$p1" != "$p2" ]]; then
+             info "- changed parameters for $fname_p → MAJOR [$line]"
+             major=1
+           fi
+         fi
+       done
       fi
 
       # Removed public property
