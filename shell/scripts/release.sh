@@ -73,7 +73,7 @@ else
 fi
 
 # Directory containing the git repo (equivalent to "cd src" in your PHP code)
-RELEASER_BASE_DIR="${RELEASER_BASE_DIR:-laravel}"
+RELEASER_BASE_DIR="${RELEASER_BASE_DIR:-.}"
 
 # Validate RELEASER_BASE_DIR
 
