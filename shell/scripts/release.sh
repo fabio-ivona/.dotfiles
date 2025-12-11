@@ -78,7 +78,7 @@ RELEASER_BASE_DIR="${RELEASER_BASE_DIR:-.}"
 # Validate RELEASER_BASE_DIR
 
 if ! git -C "$RELEASER_BASE_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  warn "RELEASER_BASE_DIR '$RELEASER_BASE_DIR' is not a git working tree"
+  warn "'$RELEASER_BASE_DIR' is not a git working tree, yon can set RELEASER_BASE_DIR your .env file"
   exit 1
 fi
 
