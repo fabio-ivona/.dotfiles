@@ -428,25 +428,26 @@ bump_new_version() {
   if [[ -n "$answer" ]]; then
     TYPE="$answer"
   fi
-
+  
   local major minor patch
   IFS='.' read -r major minor patch <<<"${OLD_VERSION:-0.0.0}"
   major=${major:-0}
   minor=${minor:-0}
   patch=${patch:-0}
+  
 
   case "$TYPE" in
     major)
-      ((major++))
+      major=$((major + 1))
       minor=0
       patch=0
       ;;
     minor)
-      ((minor++))
+      minor=$((minor + 1))
       patch=0
       ;;
     patch|"")
-      ((patch++))
+      patch=$((patch + 1))
       TYPE="patch"
       ;;
     *)
@@ -454,6 +455,7 @@ bump_new_version() {
       return 1
       ;;
   esac
+
 
   NEW_VERSION="${major}.${minor}.${patch}"
 
