@@ -9,6 +9,7 @@ set -euo pipefail
 
 # Parsed CLI options
 TYPE=""       # major|minor|patch
+TYPE_SET=0    # 1 = provided via CLI
 FORCE=0       # 1 = skip confirmation
 
 usage() {
@@ -17,7 +18,8 @@ Usage: $(basename "$0") [major|minor|patch] [--force] [--message "text"]
 
 Arguments:
   major|minor|patch   Optional release type. If omitted, it will be detected
-                      from git diff (like your Laravel command).
+                      from git diff (like your Laravel command). When provided,
+                      the confirmation prompt is skipped.
 Options:
   --force             Don't ask confirmation before creating the tag.
 EOF
@@ -35,11 +37,11 @@ replace_last_line() {
 ########################################
 # Parse arguments
 ########################################
-
 while [[ $# -gt 0 ]]; do
   case "$1" in
     major|minor|patch)
       TYPE="$1"
+      TYPE_SET=1
       shift
       ;;
     --force)
@@ -189,12 +191,6 @@ get_current_version() {
 }
 
 detect_release_type() {
-  # If user provided the type, respect it.
-  if [[ -n "${TYPE:-}" ]]; then
-    info "Using provided release type: $TYPE"
-    return 0
-  fi
-
   info "Detecting release type from git diff since $OLD_TAG..."
 
   local changed
@@ -422,11 +418,15 @@ detect_release_type() {
 }
 
 bump_new_version() {
-  # Confirm / override type
-  printf 'Please confirm release type [major|minor|patch] (default: %s): ' "${TYPE:-patch}"
-  read -r answer || true
-  if [[ -n "$answer" ]]; then
-    TYPE="$answer"
+  if [[ "$TYPE_SET" -ne 1 ]]; then
+    # Confirm / override type
+    printf 'Please confirm auto-detected release type [major|minor|patch] (default: %s): ' "${TYPE:-patch}"
+    read -r answer || true
+    if [[ -n "$answer" ]]; then
+      TYPE="$answer"
+    fi
+  else
+    info "Using provided release type: $TYPE"
   fi
   
   local major minor patch
@@ -572,7 +572,11 @@ main() {
    check_uncommitted_changes
    get_repository
    get_current_version
-   detect_release_type
+   if [[ "$TYPE_SET" -ne 1 ]]; then
+     detect_release_type
+   else
+     info "Skipping auto-detect; using provided release type: $TYPE"
+   fi
    bump_new_version
    create_new_tag
    get_changes

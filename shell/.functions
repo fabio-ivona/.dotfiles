@@ -11,5 +11,5 @@ archive () {
 
 # issue a new github release
 function release(){
-    "$HOME/.dotfiles/shell/scripts/release.sh";
+    "$HOME/.dotfiles/shell/scripts/release.sh" "$@";
 }
