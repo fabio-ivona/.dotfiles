@@ -92,6 +92,11 @@ if [[ -z "${GITHUB_TOKEN:-}" ]]; then
   else
     warn "1Password CLI (op) not found in PATH"
   fi
+
+  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    warn "GITHUB_TOKEN is required and could not be loaded from .env or 1Password"
+    exit 1
+  fi
 fi
 
 # Directory containing the git repo (equivalent to "cd src" in your PHP code)
