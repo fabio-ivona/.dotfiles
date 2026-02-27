@@ -71,7 +71,27 @@ if [[ -f .env ]]; then
   source .env
   set +a
 else
-  warn "No .env file is present"
+  warn "No .env file is present, using 1PasswordCli"
+fi
+
+if [[ -z "${RELEASER_BASE_DIR:-}" ]]; then
+  if [[ -d "src" ]]; then
+    RELEASER_BASE_DIR="src"
+  elif [[ -d "laravel" ]]; then
+    RELEASER_BASE_DIR="laravel"
+  else
+    RELEASER_BASE_DIR="."
+  fi
+fi
+
+if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+  if command -v op >/dev/null 2>&1; then
+    if ! GITHUB_TOKEN=$(op read "op://Private/GitHub Personal Access Token Studio/token" 2>/dev/null); then
+      warn "Failed to read GITHUB_TOKEN from 1Password"
+    fi
+  else
+    warn "1Password CLI (op) not found in PATH"
+  fi
 fi
 
 # Directory containing the git repo (equivalent to "cd src" in your PHP code)
