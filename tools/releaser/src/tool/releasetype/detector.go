@@ -19,13 +19,14 @@ func Detect(cfg *shared.Config) error {
 
 	buckets, empty := collectChangedFiles(changedFilesRaw)
 	if empty {
-		output.Info("No code changes detected → patch")
+		output.Info("No code changes detected → " + output.SemverLabel("patch"))
 		cfg.Type = "patch"
 		return nil
 	}
 	output.Verbose("Changed files by category: " + buckets.summary())
+	logBucketDetails(buckets)
 
-	signals := &releaseSignals{}
+	signals := newReleaseSignals()
 	analyzePHPChanges(cfg, buckets.phpFiles, signals)
 	applyFileCategorySignals(buckets, signals)
 	output.Verbose("Signals before final decision: major=" + boolString(signals.major) + " minor=" + boolString(signals.minor))
@@ -36,9 +37,18 @@ func Detect(cfg *shared.Config) error {
 
 func analyzePHPChanges(cfg *shared.Config, phpFiles []string, signals *releaseSignals) {
 	for _, file := range phpFiles {
-		output.Verbose("Analyzing PHP file: " + file)
+		output.VeryVerbose("Analyzing PHP file: " + file)
 		analyzePHPFile(cfg, file, signals)
 	}
+}
+
+func logBucketDetails(buckets changeBuckets) {
+	output.VeryVerboseList("PHP files", buckets.phpFiles, 10)
+	output.VeryVerboseList("Migration files", buckets.migrations, 10)
+	output.VeryVerboseList("Doc files", buckets.docs, 10)
+	output.VeryVerboseList("Config files", buckets.configs, 10)
+	output.VeryVerboseList("View files", buckets.views, 10)
+	output.VeryVerboseList("Composer files", buckets.composerFiles, 10)
 }
 
 func boolString(v bool) string {

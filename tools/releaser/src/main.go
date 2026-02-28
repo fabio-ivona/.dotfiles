@@ -29,8 +29,12 @@ func run(args []string) error {
 	if err := parseAndValidateArgs(cfg, args); err != nil {
 		return err
 	}
-	output.SetVerbose(cfg.Verbose)
-	output.Verbose("Verbose logging enabled")
+	output.SetVerbosity(cfg.Verbosity)
+	if cfg.Verbosity == 2 {
+		output.Verbose("Very verbose logging enabled")
+	} else if cfg.Verbosity == 1 {
+		output.Verbose("Verbose logging enabled")
+	}
 	output.Verbose("CLI args parsed successfully")
 	if err := prepareEnvironment(cfg); err != nil {
 		return err

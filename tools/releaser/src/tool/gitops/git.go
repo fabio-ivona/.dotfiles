@@ -70,7 +70,7 @@ func GetRepository(cfg *shared.Config) error {
 }
 
 func Run(dir string, args ...string) (string, error) {
-	output.Verbose("git -C " + dir + " " + strings.Join(args, " "))
+	output.VeryVerbose("git -C " + dir + " " + strings.Join(args, " "))
 	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
 	out, err := cmd.CombinedOutput()
 	outputText := strings.TrimSpace(string(out))

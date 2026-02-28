@@ -14,12 +14,15 @@ const (
 	colorCyan   = "\033[36m"
 	colorYellow = "\033[33m"
 	colorGreen  = "\033[32m"
-	colorRed    = "\033[31m"
+	colorRed    = "\033[91m"
 	colorBlue   = "\033[34m"
+	colorOrange = "\033[38;5;208m"
+	colorWhite  = "\033[97m"
+	colorGray   = "\033[90m"
 )
 
 var enableColor = supportsColor()
-var verboseEnabled bool
+var verbosityLevel int
 
 func Blank() {
 	fmt.Println()
@@ -39,10 +42,59 @@ func Info(msg string) {
 }
 
 func Verbose(msg string) {
-	if !verboseEnabled {
+	if verbosityLevel < 1 {
 		return
 	}
 	printLine(os.Stdout, "DEBUG", colorBlue, msg)
+}
+
+func VerboseList(title string, items []string, max int) {
+	if verbosityLevel < 1 || len(items) == 0 {
+		return
+	}
+	if max <= 0 {
+		max = 10
+	}
+
+	Verbose(fmt.Sprintf("%s (%d)", title, len(items)))
+	limit := len(items)
+	if limit > max {
+		limit = max
+	}
+	for i := 0; i < limit; i++ {
+		Verbose("  - " + items[i])
+	}
+	if len(items) > max {
+		Verbose(fmt.Sprintf("  ... +%d more", len(items)-max))
+	}
+}
+
+func VeryVerbose(msg string) {
+	if verbosityLevel < 2 {
+		return
+	}
+	printLine(os.Stdout, "TRACE", colorBlue, msg)
+}
+
+func VeryVerboseList(title string, items []string, max int) {
+	if verbosityLevel < 2 || len(items) == 0 {
+		return
+	}
+	if max <= 0 {
+		max = 10
+	}
+
+	VeryVerbose(fmt.Sprintf("%s (%d)", title, len(items)))
+	limit := len(items)
+	if limit > max {
+		limit = max
+	}
+	for i := 0; i < limit; i++ {
+		VeryVerbose("  - " + items[i])
+	}
+	if len(items) > max {
+		VeryVerbose(fmt.Sprintf("  ... +%d more", len(items)-max))
+	}
 }
 
 func Warn(msg string) {
@@ -68,8 +120,58 @@ func Exit(code int) {
 	os.Exit(code)
 }
 
-func SetVerbose(enabled bool) {
-	verboseEnabled = enabled
+func SetVerbosity(level int) {
+	switch {
+	case level < 0:
+		verbosityLevel = 0
+	case level > 2:
+		verbosityLevel = 2
+	default:
+		verbosityLevel = level
+	}
+}
+
+func SemverLabel(kind string) string {
+	upper := strings.ToUpper(strings.TrimSpace(kind))
+	lower := strings.ToLower(upper)
+	if upper == "" || !enableColor {
+		return lower
+	}
+
+	var color string
+	switch upper {
+	case "PATCH":
+		color = colorGreen
+	case "MINOR":
+		color = colorOrange
+	case "MAJOR":
+		color = colorRed
+	default:
+		return lower
+	}
+
+	return color + lower + colorReset
+}
+
+func PrimaryText(text string) string {
+	if !enableColor {
+		return text
+	}
+	return colorWhite + text + colorReset
+}
+
+func SecondaryText(text string) string {
+	if !enableColor {
+		return text
+	}
+	return colorGray + text + colorReset
+}
+
+func AccentText(text string) string {
+	if !enableColor {
+		return text
+	}
+	return colorBold + colorCyan + text + colorReset
 }
 
 func printLine(stream *os.File, level, levelColor, msg string) {
