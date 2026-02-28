@@ -4,20 +4,15 @@
 sudo apt update
 sudo apt install curl
 
-source ~/.dotfiles/installation/zsh/install
-
 source ~/.dotfiles/installation/misc/git
 source ~/.dotfiles/installation/misc/fonts
 source ~/.dotfiles/installation/misc/ssh
 source ~/.dotfiles/installation/misc/tools
-source ~/.dotfiles/installation/misc/1password
 
 source ~/.dotfiles/installation/code/php
 source ~/.dotfiles/installation/code/npm
 source ~/.dotfiles/installation/code/docker
 source ~/.dotfiles/installation/code/phpstorm
-source ~/.dotfiles/installation/code/sublime
-source ~/.dotfiles/installation/code/android_studio
 source ~/.dotfiles/installation/code/ray
 
 
