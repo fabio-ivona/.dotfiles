@@ -7,42 +7,49 @@ import (
 	"releaser/tool/shared"
 )
 
-func applyFileTypeSignals(buckets changedBuckets, indicators *releaseIndicators) {
+func applyFileCategorySignals(buckets changeBuckets, signals *releaseSignals) {
 	if len(buckets.composerFiles) > 0 {
 		output.Info("- composer.json/lock changed → patch")
 	}
 	if len(buckets.views) > 0 {
-		output.Info("- new views → Minor [" + strings.Join(buckets.views, " ") + "]")
-		indicators.minor = true
+		markMinor(signals, "- new views → Minor ["+strings.Join(buckets.views, " ")+"]")
 	}
 	if len(buckets.migrations) > 0 {
-		output.Info("- new migrations → Minor [" + strings.Join(buckets.migrations, " ") + "]")
-		indicators.minor = true
+		markMinor(signals, "- new migrations → Minor ["+strings.Join(buckets.migrations, " ")+"]")
 	}
 	if len(buckets.configs) > 0 {
-		output.Info("- new configs → Minor [" + strings.Join(buckets.configs, " ") + "]")
-		indicators.minor = true
+		markMinor(signals, "- new configs → Minor ["+strings.Join(buckets.configs, " ")+"]")
 	}
 }
 
-func finalizeReleaseType(cfg *shared.Config, buckets changedBuckets, indicators *releaseIndicators) {
+func applyFinalDecision(cfg *shared.Config, buckets changeBuckets, signals *releaseSignals) {
 	output.Blank()
-	if len(buckets.phpFiles) == 0 && (len(buckets.tests) > 0 || len(buckets.docs) > 0) {
-		all := append([]string{}, buckets.tests...)
-		all = append(all, buckets.docs...)
-		output.Info("🧪 Only tests/docs changed → PATCH [" + strings.Join(all, ", ") + "]")
+
+	if buckets.hasOnlyDocsOrTests() {
+		output.Info("🧪 Only tests/docs changed → PATCH [" + strings.Join(buckets.docsAndTests(), ", ") + "]")
 		cfg.Type = "patch"
 		return
 	}
 
-	if indicators.major {
+	switch {
+	case signals.major:
 		output.Info("🧨 Detected MAJOR changes")
 		cfg.Type = "major"
-	} else if indicators.minor {
+	case signals.minor:
 		output.Info("✨ Detected Minor changes")
 		cfg.Type = "minor"
-	} else {
+	default:
 		output.Info("🐛 Only safe changes → PATCH")
 		cfg.Type = "patch"
 	}
+}
+
+func markMajor(signals *releaseSignals, message string) {
+	output.Info(message)
+	signals.major = true
+}
+
+func markMinor(signals *releaseSignals, message string) {
+	output.Info(message)
+	signals.minor = true
 }
