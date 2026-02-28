@@ -1,6 +1,9 @@
 package releasetype
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type changeBuckets struct {
 	phpFiles      []string
@@ -25,6 +28,19 @@ func (b changeBuckets) docsAndTests() []string {
 	all := append([]string{}, b.tests...)
 	all = append(all, b.docs...)
 	return all
+}
+
+func (b changeBuckets) summary() string {
+	return fmt.Sprintf(
+		"php=%d migrations=%d tests=%d docs=%d configs=%d views=%d composer=%d",
+		len(b.phpFiles),
+		len(b.migrations),
+		len(b.tests),
+		len(b.docs),
+		len(b.configs),
+		len(b.views),
+		len(b.composerFiles),
+	)
 }
 
 func trimNonEmptyLines(raw string) []string {

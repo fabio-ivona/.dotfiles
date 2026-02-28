@@ -13,6 +13,7 @@ import (
 
 func Load() error {
 	if _, err := os.Stat(".env"); err == nil {
+		output.Verbose("Found .env file in current directory")
 		file, err := os.Open(".env")
 		if err != nil {
 			return fmt.Errorf("Failed to read .env: %w", err)
@@ -61,6 +62,7 @@ func DetectBaseDir() string {
 }
 
 func ReadTokenFrom1Password() (string, error) {
+	output.Verbose("Reading GITHUB_TOKEN from 1Password CLI")
 	if _, err := exec.LookPath("op"); err != nil {
 		return "", errors.New("1Password CLI (op) not found in PATH")
 	}

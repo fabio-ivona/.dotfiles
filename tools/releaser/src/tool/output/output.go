@@ -15,9 +15,11 @@ const (
 	colorYellow = "\033[33m"
 	colorGreen  = "\033[32m"
 	colorRed    = "\033[31m"
+	colorBlue   = "\033[34m"
 )
 
 var enableColor = supportsColor()
+var verboseEnabled bool
 
 func Blank() {
 	fmt.Println()
@@ -34,6 +36,13 @@ func Ask(prompt string) string {
 
 func Info(msg string) {
 	printLine(os.Stdout, "INFO", colorCyan, msg)
+}
+
+func Verbose(msg string) {
+	if !verboseEnabled {
+		return
+	}
+	printLine(os.Stdout, "DEBUG", colorBlue, msg)
 }
 
 func Warn(msg string) {
@@ -57,6 +66,10 @@ func ReplaceLastLine(msg string) {
 
 func Exit(code int) {
 	os.Exit(code)
+}
+
+func SetVerbose(enabled bool) {
+	verboseEnabled = enabled
 }
 
 func printLine(stream *os.File, level, levelColor, msg string) {

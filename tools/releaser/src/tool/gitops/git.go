@@ -70,6 +70,7 @@ func GetRepository(cfg *shared.Config) error {
 }
 
 func Run(dir string, args ...string) (string, error) {
+	output.Verbose("git -C " + dir + " " + strings.Join(args, " "))
 	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
 	out, err := cmd.CombinedOutput()
 	outputText := strings.TrimSpace(string(out))
@@ -110,6 +111,7 @@ func RemoteTagExists(dir, tag string) (bool, error) {
 }
 
 func AheadBehind(dir string) (ahead int, behind int, hasUpstream bool, err error) {
+	output.Verbose("Checking branch ahead/behind status")
 	upstreamCmd := exec.Command("git", "-C", dir, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}")
 	if out, upstreamErr := upstreamCmd.CombinedOutput(); upstreamErr != nil {
 		var exitErr *exec.ExitError

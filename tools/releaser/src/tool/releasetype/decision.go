@@ -8,6 +8,7 @@ import (
 )
 
 func applyFileCategorySignals(buckets changeBuckets, signals *releaseSignals) {
+	output.Verbose("Applying non-PHP category signals")
 	if len(buckets.composerFiles) > 0 {
 		output.Info("- composer.json/lock changed → patch")
 	}
@@ -24,6 +25,7 @@ func applyFileCategorySignals(buckets changeBuckets, signals *releaseSignals) {
 
 func applyFinalDecision(cfg *shared.Config, buckets changeBuckets, signals *releaseSignals) {
 	output.Blank()
+	output.Verbose("Applying final release-type decision")
 
 	if buckets.hasOnlyDocsOrTests() {
 		output.Info("🧪 Only tests/docs changed → PATCH [" + strings.Join(buckets.docsAndTests(), ", ") + "]")

@@ -29,6 +29,9 @@ func run(args []string) error {
 	if err := parseAndValidateArgs(cfg, args); err != nil {
 		return err
 	}
+	output.SetVerbose(cfg.Verbose)
+	output.Verbose("Verbose logging enabled")
+	output.Verbose("CLI args parsed successfully")
 	if err := prepareEnvironment(cfg); err != nil {
 		return err
 	}
@@ -54,6 +57,7 @@ func parseAndValidateArgs(cfg *shared.Config, args []string) error {
 }
 
 func prepareEnvironment(cfg *shared.Config) error {
+	output.Verbose("Loading environment variables")
 	if err := env.Load(); err != nil {
 		output.Warn(err.Error())
 		return err
@@ -61,14 +65,19 @@ func prepareEnvironment(cfg *shared.Config) error {
 	if cfg.BaseDir == "" {
 		cfg.BaseDir = env.DetectBaseDir()
 	}
+	output.Verbose("Base directory resolved to: " + cfg.BaseDir)
 
 	cfg.Token = os.Getenv("GITHUB_TOKEN")
 	if cfg.Token == "" {
+		output.Verbose("GITHUB_TOKEN not found in environment; trying 1Password")
 		if token, err := env.ReadTokenFrom1Password(); err == nil {
 			cfg.Token = token
+			output.Verbose("GITHUB_TOKEN loaded from 1Password")
 		} else {
 			output.Warn(err.Error())
 		}
+	} else {
+		output.Verbose("GITHUB_TOKEN loaded from environment")
 	}
 	if cfg.Token == "" {
 		output.Warn("GITHUB_TOKEN is required and could not be loaded from .env or 1Password")
@@ -78,6 +87,7 @@ func prepareEnvironment(cfg *shared.Config) error {
 }
 
 func runReleaseFlow(cfg *shared.Config) error {
+	output.Verbose("Starting release flow")
 	if !gitops.IsGitRepo(cfg.BaseDir) {
 		output.Warn(fmt.Sprintf("'%s' is not a git working tree, yon can set RELEASER_BASE_DIR your .env file", cfg.BaseDir))
 		return fmt.Errorf("not a git repository: %s", cfg.BaseDir)
@@ -87,12 +97,16 @@ func runReleaseFlow(cfg *shared.Config) error {
 		return err
 	}
 
-	for _, step := range []func(*shared.Config) error{
-		gitops.CheckUncommittedChanges,
-		gitops.GetRepository,
-		githubapi.GetCurrentVersion,
+	for _, step := range []struct {
+		name string
+		fn   func(*shared.Config) error
+	}{
+		{name: "CheckUncommittedChanges", fn: gitops.CheckUncommittedChanges},
+		{name: "GetRepository", fn: gitops.GetRepository},
+		{name: "GetCurrentVersion", fn: githubapi.GetCurrentVersion},
 	} {
-		if err := step(cfg); err != nil {
+		output.Verbose("Running preflight step: " + step.name)
+		if err := step.fn(cfg); err != nil {
 			return err
 		}
 	}
@@ -105,13 +119,17 @@ func runReleaseFlow(cfg *shared.Config) error {
 		}
 	}
 
-	for _, step := range []func(*shared.Config) error{
-		version.Bump,
-		release.CreateTag,
-		release.BuildChanges,
-		githubapi.CreateRelease,
+	for _, step := range []struct {
+		name string
+		fn   func(*shared.Config) error
+	}{
+		{name: "VersionBump", fn: version.Bump},
+		{name: "CreateTag", fn: release.CreateTag},
+		{name: "BuildChanges", fn: release.BuildChanges},
+		{name: "CreateRelease", fn: githubapi.CreateRelease},
 	} {
-		if err := step(cfg); err != nil {
+		output.Verbose("Running release step: " + step.name)
+		if err := step.fn(cfg); err != nil {
 			return err
 		}
 	}

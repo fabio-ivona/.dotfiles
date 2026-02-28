@@ -1,12 +1,19 @@
 package releasetype
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+
+	"releaser/tool/output"
+)
 
 func collectChangedFiles(raw string) (changeBuckets, bool) {
 	files := trimNonEmptyLines(raw)
 	if len(files) == 0 {
 		return changeBuckets{}, true
 	}
+	output.Verbose("Changed file count: " + strconv.Itoa(len(files)))
+	output.Verbose("Changed files: " + strings.Join(files, ", "))
 
 	buckets := changeBuckets{}
 	for _, file := range files {

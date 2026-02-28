@@ -16,6 +16,7 @@ import (
 func GetCurrentVersion(cfg *shared.Config) error {
 	label := "Fetching latest GitHub release"
 	output.Info(label + "...")
+	output.Verbose("Repository: " + cfg.Repo)
 
 	resp, err := request("GET", "https://api.github.com/repos/"+cfg.Repo+"/releases/latest", cfg.Token, nil)
 	if err != nil {
@@ -48,6 +49,7 @@ func GetCurrentVersion(cfg *shared.Config) error {
 
 func CreateRelease(cfg *shared.Config) error {
 	output.Info("Creating GitHub release " + cfg.NewTag + "...")
+	output.Verbose("Release compare URL: https://github.com/" + cfg.Repo + "/compare/" + cfg.OldTag + "..." + cfg.NewTag)
 	payload := map[string]any{
 		"tag_name":   cfg.NewTag,
 		"name":       cfg.NewTag,
@@ -85,6 +87,7 @@ func CreateRelease(cfg *shared.Config) error {
 }
 
 func request(method, url, token string, body []byte) ([]byte, error) {
+	output.Verbose("GitHub API request: " + method + " " + url)
 	var reader io.Reader
 	if body != nil {
 		reader = bytes.NewReader(body)
@@ -112,7 +115,9 @@ func request(method, url, token string, body []byte) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		output.Verbose("GitHub API non-success status: " + resp.Status)
 		return b, fmt.Errorf("github api status %s", resp.Status)
 	}
+	output.Verbose("GitHub API response status: " + resp.Status)
 	return b, nil
 }

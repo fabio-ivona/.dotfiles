@@ -2,9 +2,11 @@ package releasetype
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 
 	"releaser/tool/gitops"
+	"releaser/tool/output"
 	"releaser/tool/shared"
 )
 
@@ -25,9 +27,11 @@ type phpDiff struct {
 func analyzePHPFile(cfg *shared.Config, file string, signals *releaseSignals) {
 	diffText, _ := gitops.Run(cfg.BaseDir, "diff", cfg.OldTag+"..HEAD", "--", file)
 	diff := parsePHPDiff(diffText)
+	output.Verbose("PHP diff stats for " + file + ": added=" + strconv.Itoa(len(diff.added)) + " removed=" + strconv.Itoa(len(diff.removed)))
 
 	changedMethods, sameSignatureMethods := detectSignatureChanges(diff, signals)
-	
+	output.Verbose("Method signature map sizes for " + file + ": changed=" + strconv.Itoa(len(changedMethods)) + " same-signature=" + strconv.Itoa(len(sameSignatureMethods)))
+
 	evaluateAddedAPI(diff, changedMethods, sameSignatureMethods, signals)
 	evaluateRemovedAPI(diff, changedMethods, sameSignatureMethods, signals)
 	evaluateControllerRule(file, signals)

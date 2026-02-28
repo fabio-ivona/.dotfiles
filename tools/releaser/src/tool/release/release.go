@@ -12,6 +12,7 @@ import (
 )
 
 func CreateTag(cfg *shared.Config) error {
+	output.Verbose("CreateTag start: type=" + cfg.Type + " tag=" + cfg.NewTag)
 	if !cfg.Force {
 		ans := output.Ask(fmt.Sprintf("Are you sure you want to create a new %s %s? [Y/n] ", cfg.Type, cfg.NewTag))
 		switch strings.ToLower(version.DefaultYes(ans)) {
@@ -46,6 +47,7 @@ func CreateTag(cfg *shared.Config) error {
 
 	shouldPushCommits := true
 	if hasUpstream {
+		output.Verbose(fmt.Sprintf("Branch sync state: ahead=%d behind=%d", ahead, behind))
 		switch {
 		case ahead == 0 && behind > 0:
 			output.Info(fmt.Sprintf("Branch is behind upstream by %d commit(s); skipping commit push.", behind))
@@ -56,6 +58,9 @@ func CreateTag(cfg *shared.Config) error {
 		case ahead > 0 && behind > 0:
 			return fmt.Errorf("branch has diverged from upstream (ahead %d, behind %d); run git pull --rebase and retry", ahead, behind)
 		}
+	}
+	if !hasUpstream {
+		output.Verbose("No upstream branch configured; commit push decision falls back to default behavior")
 	}
 
 	if shouldPushCommits {
@@ -96,6 +101,7 @@ func BuildChanges(cfg *shared.Config) error {
 			cfg.Changes += "No commits found\n\n"
 		}
 		cfg.Changes += fmt.Sprintf("**Full Changelog**: https://github.com/%s/compare/%s...%s", cfg.Repo, cfg.OldTag, cfg.NewTag)
+		output.Verbose("Release notes generated with empty commit range fallback")
 		return nil
 	}
 
@@ -124,5 +130,6 @@ func BuildChanges(cfg *shared.Config) error {
 	}
 
 	cfg.Changes = "## What's Changed\n\n" + body.String() + "\n**Full Changelog**: https://github.com/" + cfg.Repo + "/compare/" + cfg.OldTag + "..." + cfg.NewTag
+	output.Verbose("Release notes generated from commit log")
 	return nil
 }

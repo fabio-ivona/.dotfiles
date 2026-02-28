@@ -19,6 +19,7 @@ func Bump(cfg *shared.Config) error {
 	}
 
 	major, minor, patch := parse(cfg.OldVer)
+	output.Verbose(fmt.Sprintf("Parsed current version: major=%d minor=%d patch=%d", major, minor, patch))
 	switch cfg.Type {
 	case "major":
 		major++
