@@ -21,12 +21,18 @@ type releaseSignals struct {
 	major       bool
 	minor       bool
 	globalRules []string
-	fileRules   map[string][]string
+	fileRules   map[string][]fileRule
+}
+
+type fileRule struct {
+	severity string
+	reason   string
+	snippet  string
 }
 
 func newReleaseSignals() *releaseSignals {
 	return &releaseSignals{
-		fileRules: make(map[string][]string),
+		fileRules: make(map[string][]fileRule),
 	}
 }
 
@@ -37,13 +43,17 @@ func (s *releaseSignals) addGlobalRule(rule string) {
 	s.globalRules = append(s.globalRules, rule)
 }
 
-func (s *releaseSignals) addFileRule(file, rule string) {
+func (s *releaseSignals) addFileRule(file, severity, reason, snippet string) {
 	file = strings.TrimSpace(file)
-	rule = strings.TrimSpace(rule)
-	if file == "" || rule == "" {
+	reason = strings.TrimSpace(reason)
+	if file == "" || reason == "" {
 		return
 	}
-	s.fileRules[file] = append(s.fileRules[file], rule)
+	s.fileRules[file] = append(s.fileRules[file], fileRule{
+		severity: strings.TrimSpace(severity),
+		reason:   reason,
+		snippet:  strings.TrimSpace(snippet),
+	})
 }
 
 func (s *releaseSignals) emitRules() {
@@ -62,11 +72,39 @@ func (s *releaseSignals) emitRules() {
 	sort.Strings(files)
 
 	for _, file := range files {
+		if output.VerbosityLevel() >= 1 {
+			renderBoxedFileRules(file, s.fileRules[file])
+			continue
+		}
+
 		output.Info(output.AccentText("[" + file + "]"))
 		for _, rule := range s.fileRules[file] {
-			output.Info("  - " + rule)
+			output.Continue("  - " + output.SemverLabel(rule.severity) + " | " + output.PrimaryText(rule.reason))
 		}
 	}
+}
+
+func renderBoxedFileRules(file string, rules []fileRule) {
+	width := len(file) + 4
+	if width < 32 {
+		width = 32
+	}
+	if width > 72 {
+		width = 72
+	}
+
+	output.Info(output.AccentText("┌─ " + file))
+	for _, rule := range rules {
+		border := output.AccentText("│")
+		output.Continue(border)
+		output.Continue(border + "  " + output.SemverLabel(rule.severity) + " - " + output.PrimaryText(rule.reason))
+		if rule.snippet != "" {
+			for _, line := range strings.Split(rule.snippet, "\n") {
+				output.Continue(border + "    " + output.SecondaryText(line))
+			}
+		}
+	}
+	output.Continue(output.AccentText("└" + strings.Repeat("─", width)))
 }
 
 func (b changeBuckets) hasOnlyDocs() bool {

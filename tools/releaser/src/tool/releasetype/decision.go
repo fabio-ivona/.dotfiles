@@ -67,12 +67,12 @@ func markPatch(signals *releaseSignals, message string) {
 	signals.addGlobalRule(output.SemverLabel("patch") + " | " + message)
 }
 
-func markMajorForFile(signals *releaseSignals, file, message string) {
+func markMajorForFile(signals *releaseSignals, file, reason, snippet string) {
 	signals.major = true
-	signals.addFileRule(file, output.SemverLabel("major")+" | "+message)
+	signals.addFileRule(file, "major", reason, snippet)
 }
 
-func markMinorForFile(signals *releaseSignals, file, message string) {
+func markMinorForFile(signals *releaseSignals, file, reason, snippet string) {
 	signals.minor = true
-	signals.addFileRule(file, output.SemverLabel("minor")+" | "+message)
+	signals.addFileRule(file, "minor", reason, snippet)
 }

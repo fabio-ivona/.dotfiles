@@ -16,6 +16,7 @@ const (
 	colorGreen  = "\033[32m"
 	colorRed    = "\033[91m"
 	colorBlue   = "\033[34m"
+	colorSteel  = "\033[38;5;110m"
 	colorOrange = "\033[38;5;208m"
 	colorWhite  = "\033[97m"
 	colorGray   = "\033[90m"
@@ -39,6 +40,10 @@ func Ask(prompt string) string {
 
 func Info(msg string) {
 	printLine(os.Stdout, "INFO", colorCyan, msg)
+}
+
+func Continue(msg string) {
+	fmt.Fprintln(os.Stdout, "      ", msg)
 }
 
 func Verbose(msg string) {
@@ -131,6 +136,10 @@ func SetVerbosity(level int) {
 	}
 }
 
+func VerbosityLevel() int {
+	return verbosityLevel
+}
+
 func SemverLabel(kind string) string {
 	upper := strings.ToUpper(strings.TrimSpace(kind))
 	lower := strings.ToLower(upper)
@@ -171,7 +180,7 @@ func AccentText(text string) string {
 	if !enableColor {
 		return text
 	}
-	return colorBold + colorCyan + text + colorReset
+	return colorSteel + text + colorReset
 }
 
 func printLine(stream *os.File, level, levelColor, msg string) {

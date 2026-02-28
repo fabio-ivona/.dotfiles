@@ -25,6 +25,16 @@ type phpDiff struct {
 	added   []string
 }
 
+type signatureLine struct {
+	params string
+	line   string
+}
+
+type visibilityLine struct {
+	visibility string
+	line       string
+}
+
 func analyzePHPFile(cfg *shared.Config, file string, signals *releaseSignals) {
 	diffText, _ := gitops.Run(cfg.BaseDir, "diff", cfg.OldTag+"..HEAD", "--", file)
 	diff := parsePHPDiff(diffText)
@@ -42,9 +52,9 @@ func parsePHPDiff(raw string) phpDiff {
 	d := phpDiff{}
 	for _, line := range strings.Split(raw, "\n") {
 		switch {
-		case strings.HasPrefix(line, "-"):
+		case strings.HasPrefix(line, "-") && !strings.HasPrefix(line, "---"):
 			d.removed = append(d.removed, strings.TrimPrefix(line, "-"))
-		case strings.HasPrefix(line, "+"):
+		case strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++"):
 			d.added = append(d.added, strings.TrimPrefix(line, "+"))
 		}
 	}
@@ -62,11 +72,11 @@ func detectSignatureChanges(file string, diff phpDiff, signals *releaseSignals) 
 			continue
 		}
 
-		for _, newParams := range addedSignatures[name] {
-			if oldParams != newParams {
+		for _, addedSig := range addedSignatures[name] {
+			if oldParams != addedSig.params {
 				changedMethods[name] = true
 				sameSignatureMethods[name] = false
-				markMajorForFile(signals, file, formatRuleMessage("changed parameters for "+name, removedLine))
+				markMajorForFile(signals, file, "changed parameters for "+name, diffPairSnippet(removedLine, addedSig.line))
 			} else if !changedMethods[name] {
 				sameSignatureMethods[name] = true
 			}
@@ -76,14 +86,14 @@ func detectSignatureChanges(file string, diff phpDiff, signals *releaseSignals) 
 	return changedMethods, sameSignatureMethods
 }
 
-func collectAddedSignatures(lines []string) map[string][]string {
-	out := make(map[string][]string)
+func collectAddedSignatures(lines []string) map[string][]signatureLine {
+	out := make(map[string][]signatureLine)
 	for _, line := range lines {
 		name, params, ok := extractPublicSignature(line)
 		if !ok {
 			continue
 		}
-		out[name] = append(out[name], params)
+		out[name] = append(out[name], signatureLine{params: params, line: line})
 	}
 	return out
 }
@@ -103,26 +113,26 @@ func evaluateAddedAPI(file string, diff phpDiff, changedMethods, sameSignatureMe
 	}
 	removedTypes := collectTypeDecls(diff.removed)
 
-	for _, line := range diff.added {
+	for i, line := range diff.added {
 		if reTypeDecl.MatchString(line) {
 			kind, name, _ := extractTypeDecl(line)
 			if _, exists := removedTypes[typeDeclKey(kind, name)]; exists {
 				output.VeryVerbose("Skipping added type declaration for " + kind + " " + name + " (declaration changed in place)")
 				continue
 			}
-			markMinorForFile(signals, file, formatRuleMessage("added "+kind, line))
+			markMinorForFile(signals, file, "added "+kind, snippetBlock(diff.added, i, 4, "+ "))
 		}
 		if m := rePublicFunctionName.FindStringSubmatch(line); len(m) == 2 {
 			name := m[1]
 			if !typeAdded && !changedMethods[name] && !sameSignatureMethods[name] {
-				markMinorForFile(signals, file, formatRuleMessage("added public method", line))
+				markMinorForFile(signals, file, "added public method", snippetBlock(diff.added, i, 4, "+ "))
 			}
 		}
 		if rePublicProperty.MatchString(line) {
-			markMinorForFile(signals, file, formatRuleMessage("added public property", line))
+			markMinorForFile(signals, file, "added public property", snippetBlock(diff.added, i, 4, "+ "))
 		}
 		if rePublicConst.MatchString(line) {
-			markMinorForFile(signals, file, formatRuleMessage("added public constant", line))
+			markMinorForFile(signals, file, "added public constant", snippetBlock(diff.added, i, 4, "+ "))
 		}
 	}
 }
@@ -135,20 +145,20 @@ func evaluateRemovedAPI(file string, diff phpDiff, changedMethods, sameSignature
 	}
 	addedTypes := collectTypeDecls(diff.added)
 
-	for _, line := range diff.removed {
+	for i, line := range diff.removed {
 		if reTypeDecl.MatchString(line) {
 			kind, name, _ := extractTypeDecl(line)
 			if _, exists := addedTypes[typeDeclKey(kind, name)]; exists {
 				output.VeryVerbose("Skipping removed type declaration for " + kind + " " + name + " (declaration changed in place)")
 				continue
 			}
-			markMajorForFile(signals, file, formatRuleMessage("removed "+kind, line))
+			markMajorForFile(signals, file, "removed "+kind, snippetBlock(diff.removed, i, 4, "- "))
 		}
 
 		if m := rePublicFunctionName.FindStringSubmatch(line); len(m) == 2 {
 			name := m[1]
 			if !typeRemoved && !changedMethods[name] && !sameSignatureMethods[name] {
-				markMajorForFile(signals, file, formatRuleMessage("removed public method", line))
+				markMajorForFile(signals, file, "removed public method", snippetBlock(diff.removed, i, 4, "- "))
 			}
 		}
 
@@ -156,31 +166,29 @@ func evaluateRemovedAPI(file string, diff phpDiff, changedMethods, sameSignature
 			oldVisibility := m[1]
 			name := m[2]
 			for _, newVisibility := range addedVisibility[name] {
-				if oldVisibility != newVisibility {
-					markMajorForFile(signals, file, formatRuleMessage("visibility changed for "+name, line))
+				if oldVisibility != newVisibility.visibility {
+					markMajorForFile(signals, file, "visibility changed for "+name, diffPairSnippet(line, newVisibility.line))
 				}
 			}
 		}
 
 		if rePublicProperty.MatchString(line) {
-			markMajorForFile(signals, file, formatRuleMessage("removed public property", line))
+			markMajorForFile(signals, file, "removed public property", snippetBlock(diff.removed, i, 4, "- "))
 		}
 		if rePublicConst.MatchString(line) {
-			markMajorForFile(signals, file, formatRuleMessage("removed public constant", line))
+			markMajorForFile(signals, file, "removed public constant", snippetBlock(diff.removed, i, 4, "- "))
 		}
 	}
 }
 
-func collectFunctionVisibilities(lines []string) map[string][]string {
-	out := make(map[string][]string)
+func collectFunctionVisibilities(lines []string) map[string][]visibilityLine {
+	out := make(map[string][]visibilityLine)
 	for _, line := range lines {
 		m := reVisibilityFunction.FindStringSubmatch(line)
 		if len(m) != 3 {
 			continue
 		}
-		visibility := m[1]
-		name := m[2]
-		out[name] = append(out[name], visibility)
+		out[m[2]] = append(out[m[2]], visibilityLine{visibility: m[1], line: line})
 	}
 	return out
 }
@@ -231,31 +239,53 @@ func typeDeclKey(kind, name string) string {
 	return kind + ":" + name
 }
 
-func typeKeyword(line string) string {
-	kind, _, ok := extractTypeDecl(line)
-	if ok {
-		return kind
-	}
-	return "type"
-}
-
 func evaluateControllerRule(file string, signals *releaseSignals) {
 	if strings.HasPrefix(file, "app/Http/Controllers/") && (signals.major || signals.minor) {
-		markMinorForFile(signals, file, "controller change detected")
+		markMinorForFile(signals, file, "controller change detected", "")
 	}
 }
 
-func formatRuleMessage(rule, line string) string {
-	return output.PrimaryText(rule) + " | " + output.SecondaryText(compactSnippet(line, 120))
+func snippetBlock(lines []string, start, maxLines int, prefix string) string {
+	if start < 0 || start >= len(lines) {
+		return ""
+	}
+	if maxLines <= 0 {
+		maxLines = 4
+	}
+
+	end := start + maxLines
+	if end > len(lines) {
+		end = len(lines)
+	}
+
+	var out []string
+	for i := start; i < end; i++ {
+		out = append(out, prefix+renderSnippetCode(lines[i], 140))
+	}
+	return strings.Join(out, "\n")
 }
 
-func compactSnippet(line string, max int) string {
+func diffPairSnippet(removedLine, addedLine string) string {
+	var out []string
+	if strings.TrimSpace(removedLine) != "" {
+		out = append(out, "- "+renderSnippetCode(removedLine, 140))
+	}
+	if strings.TrimSpace(addedLine) != "" {
+		out = append(out, "+ "+renderSnippetCode(addedLine, 140))
+	}
+	return strings.Join(out, "\n")
+}
+
+func renderSnippetCode(line string, max int) string {
 	if max <= 0 {
-		max = 120
+		max = 140
 	}
-	snippet := strings.Join(strings.Fields(strings.TrimSpace(line)), " ")
-	if len(snippet) <= max {
-		return snippet
+	code := strings.TrimRight(strings.ReplaceAll(line, "\t", "    "), " \t\r")
+	if len(code) <= max {
+		return code
 	}
-	return snippet[:max-3] + "..."
+	if max <= 3 {
+		return code[:max]
+	}
+	return code[:max-3] + "..."
 }
