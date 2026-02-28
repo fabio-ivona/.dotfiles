@@ -1,7 +1,6 @@
 package releasetype
 
 import (
-	"fmt"
 	"strings"
 
 	"releaser/tool/output"
@@ -27,7 +26,7 @@ func applyFileTypeSignals(buckets changedBuckets, indicators *releaseIndicators)
 }
 
 func finalizeReleaseType(cfg *shared.Config, buckets changedBuckets, indicators *releaseIndicators) {
-	fmt.Println()
+	output.Blank()
 	if len(buckets.phpFiles) == 0 && (len(buckets.tests) > 0 || len(buckets.docs) > 0) {
 		all := append([]string{}, buckets.tests...)
 		all = append(all, buckets.docs...)

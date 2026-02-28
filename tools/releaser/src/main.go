@@ -17,24 +17,47 @@ import (
 )
 
 func main() {
+	if err := run(os.Args); err != nil {
+		output.Error(err.Error())
+		output.Exit(1)
+	}
+}
+
+func run(args []string) error {
 	cfg := &shared.Config{}
 
-	if err := cli.ParseArgs(cfg, os.Args[1:], os.Args[0]); err != nil {
-		output.Warn(err.Error())
-		cli.Usage(os.Args[0])
-		output.Exit(1)
+	if err := parseAndValidateArgs(cfg, args); err != nil {
+		return err
+	}
+	if err := prepareEnvironment(cfg); err != nil {
+		return err
+	}
+	if err := runReleaseFlow(cfg); err != nil {
+		return err
 	}
 
+	output.Success("Created GitHub release: " + cfg.Release)
+	return nil
+}
+
+func parseAndValidateArgs(cfg *shared.Config, args []string) error {
+	if err := cli.ParseArgs(cfg, args[1:], args[0]); err != nil {
+		output.Warn(err.Error())
+		cli.Usage(args[0])
+		return err
+	}
 	if cfg.TypeSet && !cli.IsValidType(cfg.Type) {
 		output.Warn("Invalid release type: " + cfg.Type)
-		output.Exit(1)
+		return fmt.Errorf("invalid release type: %s", cfg.Type)
 	}
+	return nil
+}
 
+func prepareEnvironment(cfg *shared.Config) error {
 	if err := env.Load(); err != nil {
 		output.Warn(err.Error())
-		output.Exit(1)
+		return err
 	}
-
 	if cfg.BaseDir == "" {
 		cfg.BaseDir = env.DetectBaseDir()
 	}
@@ -47,50 +70,51 @@ func main() {
 			output.Warn(err.Error())
 		}
 	}
-
 	if cfg.Token == "" {
 		output.Warn("GITHUB_TOKEN is required and could not be loaded from .env or 1Password")
-		output.Exit(1)
+		return fmt.Errorf("missing GITHUB_TOKEN")
 	}
+	return nil
+}
 
+func runReleaseFlow(cfg *shared.Config) error {
 	if !gitops.IsGitRepo(cfg.BaseDir) {
 		output.Warn(fmt.Sprintf("'%s' is not a git working tree, yon can set RELEASER_BASE_DIR your .env file", cfg.BaseDir))
-		output.Exit(1)
+		return fmt.Errorf("not a git repository: %s", cfg.BaseDir)
 	}
-
 	if _, err := exec.LookPath("git"); err != nil {
 		output.Warn("Required command 'git' not found in PATH")
-		output.Exit(1)
+		return err
 	}
 
-	if err := gitops.CheckUncommittedChanges(cfg); err != nil {
-		output.Exit(1)
-	}
-	if err := gitops.GetRepository(cfg); err != nil {
-		output.Exit(1)
-	}
-	if err := githubapi.GetCurrentVersion(cfg); err != nil {
-		output.Exit(1)
-	}
-	if !cfg.TypeSet {
-		if err := releasetype.Detect(cfg); err != nil {
-			output.Exit(1)
+	for _, step := range []func(*shared.Config) error{
+		gitops.CheckUncommittedChanges,
+		gitops.GetRepository,
+		githubapi.GetCurrentVersion,
+	} {
+		if err := step(cfg); err != nil {
+			return err
 		}
-	} else {
-		output.Info("Skipping auto-detect; using provided release type: " + cfg.Type)
-	}
-	if err := version.Bump(cfg); err != nil {
-		output.Exit(1)
-	}
-	if err := release.CreateTag(cfg); err != nil {
-		output.Exit(1)
-	}
-	if err := release.BuildChanges(cfg); err != nil {
-		output.Exit(1)
-	}
-	if err := githubapi.CreateRelease(cfg); err != nil {
-		output.Exit(1)
 	}
 
-	output.Success("Created GitHub release: " + cfg.Release)
+	if cfg.TypeSet {
+		output.Info("Skipping auto-detect; using provided release type: " + cfg.Type)
+	} else {
+		if err := releasetype.Detect(cfg); err != nil {
+			return err
+		}
+	}
+
+	for _, step := range []func(*shared.Config) error{
+		version.Bump,
+		release.CreateTag,
+		release.BuildChanges,
+		githubapi.CreateRelease,
+	} {
+		if err := step(cfg); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

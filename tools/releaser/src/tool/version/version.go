@@ -1,9 +1,7 @@
 package version
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	"releaser/tool/output"
@@ -12,11 +10,8 @@ import (
 
 func Bump(cfg *shared.Config) error {
 	if !cfg.TypeSet {
-		fmt.Println()
-		fmt.Printf("Please confirm auto-detected release type [major|minor|patch] (default: %s): ", defaultType(cfg.Type))
-		reader := bufio.NewReader(os.Stdin)
-		answer, _ := reader.ReadString('\n')
-		answer = strings.TrimSpace(answer)
+		output.Blank()
+		answer := output.Ask(fmt.Sprintf("Please confirm auto-detected release type [major|minor|patch] (default: %s): ", defaultType(cfg.Type)))
 		if answer != "" {
 			cfg.Type = answer
 		}

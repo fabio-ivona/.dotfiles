@@ -66,9 +66,13 @@ func ReadTokenFrom1Password() (string, error) {
 	}
 
 	cmd := exec.Command("op", "read", "op://Private/GitHub Personal Access Token Studio/token")
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", errors.New("Failed to read GITHUB_TOKEN from 1Password")
+		outputText := strings.TrimSpace(string(out))
+		if outputText == "" {
+			return "", fmt.Errorf("Failed to read GITHUB_TOKEN from 1Password: %w", err)
+		}
+		return "", fmt.Errorf("Failed to read GITHUB_TOKEN from 1Password: %w: %s", err, outputText)
 	}
 	return strings.TrimSpace(string(out)), nil
 }

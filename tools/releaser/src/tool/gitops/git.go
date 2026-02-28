@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"releaser/tool/output"
@@ -71,5 +72,75 @@ func GetRepository(cfg *shared.Config) error {
 func Run(dir string, args ...string) (string, error) {
 	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
 	out, err := cmd.CombinedOutput()
-	return string(out), err
+	outputText := strings.TrimSpace(string(out))
+	if err != nil {
+		if outputText == "" {
+			return string(out), fmt.Errorf("git %s failed: %w", strings.Join(args, " "), err)
+		}
+		return string(out), fmt.Errorf("git %s failed: %w: %s", strings.Join(args, " "), err, outputText)
+	}
+	return string(out), nil
+}
+
+func TagExists(dir, tag string) (bool, error) {
+	cmd := exec.Command("git", "-C", dir, "rev-parse", "-q", "--verify", "refs/tags/"+tag)
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		return true, nil
+	}
+
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
+		return false, nil
+	}
+
+	outputText := strings.TrimSpace(string(out))
+	if outputText == "" {
+		return false, fmt.Errorf("failed to check local tag %s: %w", tag, err)
+	}
+	return false, fmt.Errorf("failed to check local tag %s: %w: %s", tag, err, outputText)
+}
+
+func RemoteTagExists(dir, tag string) (bool, error) {
+	out, err := Run(dir, "ls-remote", "--tags", "origin", "refs/tags/"+tag)
+	if err != nil {
+		return false, err
+	}
+	return strings.TrimSpace(out) != "", nil
+}
+
+func AheadBehind(dir string) (ahead int, behind int, hasUpstream bool, err error) {
+	upstreamCmd := exec.Command("git", "-C", dir, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}")
+	if out, upstreamErr := upstreamCmd.CombinedOutput(); upstreamErr != nil {
+		var exitErr *exec.ExitError
+		if errors.As(upstreamErr, &exitErr) && exitErr.ExitCode() == 128 {
+			return 0, 0, false, nil
+		}
+		outputText := strings.TrimSpace(string(out))
+		if outputText == "" {
+			return 0, 0, false, fmt.Errorf("failed to resolve upstream branch: %w", upstreamErr)
+		}
+		return 0, 0, false, fmt.Errorf("failed to resolve upstream branch: %w: %s", upstreamErr, outputText)
+	}
+
+	out, err := Run(dir, "rev-list", "--left-right", "--count", "HEAD...@{upstream}")
+	if err != nil {
+		return 0, 0, true, err
+	}
+
+	fields := strings.Fields(strings.TrimSpace(out))
+	if len(fields) != 2 {
+		return 0, 0, true, fmt.Errorf("unexpected rev-list output for ahead/behind: %q", strings.TrimSpace(out))
+	}
+
+	ahead, err = strconv.Atoi(fields[0])
+	if err != nil {
+		return 0, 0, true, fmt.Errorf("invalid ahead count %q: %w", fields[0], err)
+	}
+	behind, err = strconv.Atoi(fields[1])
+	if err != nil {
+		return 0, 0, true, fmt.Errorf("invalid behind count %q: %w", fields[1], err)
+	}
+
+	return ahead, behind, true, nil
 }

@@ -1,10 +1,8 @@
 package release
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"releaser/tool/gitops"
@@ -15,10 +13,7 @@ import (
 
 func CreateTag(cfg *shared.Config) error {
 	if !cfg.Force {
-		fmt.Printf("Are you sure you want to create a new %s %s? [Y/n] ", cfg.Type, cfg.NewTag)
-		reader := bufio.NewReader(os.Stdin)
-		ans, _ := reader.ReadString('\n')
-		ans = strings.TrimSpace(ans)
+		ans := output.Ask(fmt.Sprintf("Are you sure you want to create a new %s %s? [Y/n] ", cfg.Type, cfg.NewTag))
 		switch strings.ToLower(version.DefaultYes(ans)) {
 		case "y", "yes":
 			// continue
@@ -28,19 +23,65 @@ func CreateTag(cfg *shared.Config) error {
 		}
 	}
 
-	output.Info("Creating new tag " + cfg.NewTag + " and pushing...")
-	if _, err := gitops.Run(cfg.BaseDir, "tag", cfg.NewTag); err != nil {
-		output.Warn("Failed to create/push tag " + cfg.NewTag)
+	localTagExists, err := gitops.TagExists(cfg.BaseDir, cfg.NewTag)
+	if err != nil {
+		output.Warn("Failed to check if tag already exists locally")
 		return err
 	}
-	if _, err := gitops.Run(cfg.BaseDir, "push"); err != nil {
-		output.Warn("Failed to create/push tag " + cfg.NewTag)
+	if localTagExists {
+		output.Info("Tag " + cfg.NewTag + " already exists locally; skipping tag creation.")
+	} else {
+		output.Info("Creating new tag " + cfg.NewTag + "...")
+		if _, err := gitops.Run(cfg.BaseDir, "tag", cfg.NewTag); err != nil {
+			output.Warn("Failed to create tag " + cfg.NewTag)
+			return err
+		}
+	}
+
+	ahead, behind, hasUpstream, err := gitops.AheadBehind(cfg.BaseDir)
+	if err != nil {
+		output.Warn("Failed to determine branch sync state")
 		return err
 	}
-	if _, err := gitops.Run(cfg.BaseDir, "push", "--tags"); err != nil {
-		output.Warn("Failed to create/push tag " + cfg.NewTag)
+
+	shouldPushCommits := true
+	if hasUpstream {
+		switch {
+		case ahead == 0 && behind > 0:
+			output.Info(fmt.Sprintf("Branch is behind upstream by %d commit(s); skipping commit push.", behind))
+			shouldPushCommits = false
+		case ahead == 0 && behind == 0:
+			output.Info("Branch is up to date with upstream; skipping commit push.")
+			shouldPushCommits = false
+		case ahead > 0 && behind > 0:
+			return fmt.Errorf("branch has diverged from upstream (ahead %d, behind %d); run git pull --rebase and retry", ahead, behind)
+		}
+	}
+
+	if shouldPushCommits {
+		output.Info("Pushing commits...")
+		if _, err := gitops.Run(cfg.BaseDir, "push"); err != nil {
+			output.Warn("Failed to push commits")
+			return err
+		}
+	}
+
+	remoteTagExists, err := gitops.RemoteTagExists(cfg.BaseDir, cfg.NewTag)
+	if err != nil {
+		output.Warn("Failed to check if tag already exists on origin")
 		return err
 	}
+	if remoteTagExists {
+		output.Info("Tag " + cfg.NewTag + " already exists on origin; skipping tag push.")
+		return nil
+	}
+
+	output.Info("Pushing tag " + cfg.NewTag + "...")
+	if _, err := gitops.Run(cfg.BaseDir, "push", "origin", cfg.NewTag); err != nil {
+		output.Warn("Failed to push tag " + cfg.NewTag)
+		return err
+	}
+
 	return nil
 }
 

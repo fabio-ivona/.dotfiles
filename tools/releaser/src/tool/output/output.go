@@ -1,8 +1,10 @@
 package output
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 const (
@@ -12,9 +14,23 @@ const (
 	colorCyan   = "\033[36m"
 	colorYellow = "\033[33m"
 	colorGreen  = "\033[32m"
+	colorRed    = "\033[31m"
 )
 
 var enableColor = supportsColor()
+
+func Blank() {
+	fmt.Println()
+}
+
+func Ask(prompt string) string {
+	Blank()
+	fmt.Print(prompt)
+	reader := bufio.NewReader(os.Stdin)
+	answer, _ := reader.ReadString('\n')
+	Blank()
+	return strings.TrimSpace(answer)
+}
 
 func Info(msg string) {
 	printLine(os.Stdout, "INFO", colorCyan, msg)
@@ -22,6 +38,10 @@ func Info(msg string) {
 
 func Warn(msg string) {
 	printLine(os.Stderr, "WARN", colorYellow, msg)
+}
+
+func Error(msg string) {
+	printLine(os.Stderr, "ERROR", colorRed, msg)
 }
 
 func Success(msg string) {
