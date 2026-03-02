@@ -12,7 +12,6 @@ const (
 	colorBold   = "\033[1m"
 	colorDim    = "\033[2m"
 	colorCyan   = "\033[36m"
-	colorSky    = "\033[94m"
 	colorYellow = "\033[33m"
 	colorGreen  = "\033[32m"
 	colorRed    = "\033[91m"
@@ -194,7 +193,7 @@ func WorkflowStatus(status string) string {
 	case "queued":
 		color = colorGray
 	case "running":
-		color = colorSky
+		color = colorCyan
 	case "completed":
 		color = colorGreen
 	case "skipped":

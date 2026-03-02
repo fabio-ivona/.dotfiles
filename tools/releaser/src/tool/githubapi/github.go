@@ -1,12 +1,14 @@
 package githubapi
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -126,7 +128,21 @@ func FollowReleaseWorkflow(cfg *shared.Config) error {
 
 func followWorkflowRunUntilTerminal(cfg *shared.Config, run workflowRun) error {
 	previous := ""
+	spinnerIndex := 0
+	enterCh := startEnterListener()
+	if enterCh != nil {
+		output.Continue("Press Enter to stop following.")
+	}
 	for {
+		if enterCh != nil {
+			select {
+			case <-enterCh:
+				output.Warn("Stopped following workflow status.")
+				return nil
+			default:
+			}
+		}
+
 		currentRun, err := getWorkflowRun(cfg, run.ID)
 		if err != nil {
 			output.Warn("Failed to fetch workflow run status")
@@ -150,14 +166,48 @@ func followWorkflowRunUntilTerminal(cfg *shared.Config, run workflowRun) error {
 				output.Info(message)
 			}
 			previous = current
+		} else if current == "running" {
+			output.Info("Workflow status: " + output.WorkflowStatus(current) + " " + spinnerFrame(spinnerIndex))
+			spinnerIndex++
 		}
 
 		if current == "completed" || current == "skipped" || current == "failed" {
 			return nil
 		}
 
-		time.Sleep(5 * time.Second)
+		if enterCh == nil {
+			time.Sleep(5 * time.Second)
+		} else {
+			select {
+			case <-enterCh:
+				output.Warn("Stopped following workflow status.")
+				return nil
+			case <-time.After(5 * time.Second):
+			}
+		}
 	}
+}
+
+func spinnerFrame(index int) string {
+	frames := []string{"|", "/", "-", `\`}
+	return frames[index%len(frames)]
+}
+
+func startEnterListener() <-chan struct{} {
+	stdinInfo, err := os.Stdin.Stat()
+	if err != nil || (stdinInfo.Mode()&os.ModeCharDevice) == 0 {
+		return nil
+	}
+
+	ch := make(chan struct{})
+	go func() {
+		reader := bufio.NewReader(os.Stdin)
+		_, err := reader.ReadString('\n')
+		if err == nil || errors.Is(err, io.EOF) {
+			close(ch)
+		}
+	}()
+	return ch
 }
 
 func latestReleaseWorkflowRun(cfg *shared.Config, since time.Time) (workflowRun, bool, error) {
