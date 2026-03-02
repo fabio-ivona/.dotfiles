@@ -24,7 +24,9 @@ func main() {
 }
 
 func run(args []string) error {
-	cfg := &shared.Config{}
+	cfg := &shared.Config{
+		Follow: true,
+	}
 
 	if err := parseAndValidateArgs(cfg, args); err != nil {
 		return err
@@ -44,6 +46,13 @@ func run(args []string) error {
 	}
 
 	output.Success("Created GitHub release: " + cfg.Release)
+
+	if cfg.Follow {
+		if err := githubapi.FollowReleaseWorkflow(cfg); err != nil {
+			output.Warn("Follow mode failed: " + err.Error())
+		}
+	}
+
 	return nil
 }
 

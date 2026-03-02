@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"releaser/tool/output"
 	"releaser/tool/shared"
@@ -69,7 +70,8 @@ func CreateRelease(cfg *shared.Config) error {
 	}
 
 	var out struct {
-		HTMLURL string `json:"html_url"`
+		HTMLURL     string `json:"html_url"`
+		PublishedAt string `json:"published_at"`
 	}
 	if err := json.Unmarshal(resp, &out); err != nil {
 		output.Warn("Failed to create GitHub release; response was:")
@@ -83,7 +85,166 @@ func CreateRelease(cfg *shared.Config) error {
 	}
 
 	cfg.Release = out.HTMLURL
+	cfg.Published = out.PublishedAt
 	return nil
+}
+
+func FollowReleaseWorkflow(cfg *shared.Config) error {
+	label := "Following release workflow status"
+	output.Info(label + "...")
+
+	since := time.Now().UTC().Add(-2 * time.Minute)
+	if cfg.Published != "" {
+		publishedAt, err := time.Parse(time.RFC3339, cfg.Published)
+		if err == nil {
+			since = publishedAt.Add(-30 * time.Second)
+		}
+	}
+
+	deadline := time.Now().Add(2 * time.Minute)
+	for {
+		run, found, err := latestReleaseWorkflowRun(cfg, since)
+		if err != nil {
+			output.ReplaceLastLine(label + " ⚠")
+			output.Warn("Failed to query GitHub Actions runs")
+			return err
+		}
+		if found {
+			output.ReplaceLastLine(label + ": found run ✔")
+			if run.HTMLURL != "" {
+				output.Continue("Run: " + run.HTMLURL)
+			}
+			return followWorkflowRunUntilTerminal(cfg, run)
+		}
+		if time.Now().After(deadline) {
+			output.ReplaceLastLine(label + " ⚠")
+			return errors.New("no release workflow run found within timeout")
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func followWorkflowRunUntilTerminal(cfg *shared.Config, run workflowRun) error {
+	previous := ""
+	for {
+		currentRun, err := getWorkflowRun(cfg, run.ID)
+		if err != nil {
+			output.Warn("Failed to fetch workflow run status")
+			return err
+		}
+
+		current := normalizeWorkflowStatus(currentRun.Status, currentRun.Conclusion)
+		if current != previous {
+			message := "Workflow status: " + output.WorkflowStatus(current) + " " + statusSymbol(current)
+			if previous != "" {
+				message = "Workflow status: " + output.WorkflowStatus(previous) + " -> " + output.WorkflowStatus(current) + " " + statusSymbol(current)
+			}
+
+			if current == "completed" {
+				output.Success(message)
+			} else if current == "failed" {
+				output.Error(message)
+			} else if current == "skipped" {
+				output.Warn(message)
+			} else {
+				output.Info(message)
+			}
+			previous = current
+		}
+
+		if current == "completed" || current == "skipped" || current == "failed" {
+			return nil
+		}
+
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func latestReleaseWorkflowRun(cfg *shared.Config, since time.Time) (workflowRun, bool, error) {
+	resp, err := request("GET", "https://api.github.com/repos/"+cfg.Repo+"/actions/runs?event=release&per_page=20", cfg.Token, nil)
+	if err != nil {
+		return workflowRun{}, false, err
+	}
+
+	var payload struct {
+		WorkflowRuns []workflowRun `json:"workflow_runs"`
+	}
+	if err := json.Unmarshal(resp, &payload); err != nil {
+		return workflowRun{}, false, err
+	}
+
+	for _, run := range payload.WorkflowRuns {
+		createdAt, err := time.Parse(time.RFC3339, run.CreatedAt)
+		if err != nil {
+			continue
+		}
+		if createdAt.Before(since) {
+			continue
+		}
+		return run, true, nil
+	}
+
+	return workflowRun{}, false, nil
+}
+
+func getWorkflowRun(cfg *shared.Config, id int64) (workflowRun, error) {
+	resp, err := request("GET", fmt.Sprintf("https://api.github.com/repos/%s/actions/runs/%d", cfg.Repo, id), cfg.Token, nil)
+	if err != nil {
+		return workflowRun{}, err
+	}
+
+	var run workflowRun
+	if err := json.Unmarshal(resp, &run); err != nil {
+		return workflowRun{}, err
+	}
+	return run, nil
+}
+
+func normalizeWorkflowStatus(status, conclusion string) string {
+	switch strings.ToLower(status) {
+	case "queued", "requested", "waiting", "pending":
+		return "queued"
+	case "in_progress":
+		return "running"
+	case "completed":
+		switch strings.ToLower(conclusion) {
+		case "skipped":
+			return "skipped"
+		case "success", "neutral":
+			return "completed"
+		case "":
+			return "completed"
+		default:
+			return "failed"
+		}
+	default:
+		return "queued"
+	}
+}
+
+func statusSymbol(status string) string {
+	switch status {
+	case "queued":
+		return "⌛"
+	case "running":
+		return "⌛"
+	case "completed":
+		return "✔"
+	case "skipped":
+		return "⏭"
+	case "failed":
+		return "⚠"
+	default:
+		return "⌛"
+	}
+}
+
+type workflowRun struct {
+	ID         int64  `json:"id"`
+	Status     string `json:"status"`
+	Conclusion string `json:"conclusion"`
+	CreatedAt  string `json:"created_at"`
+	HTMLURL    string `json:"html_url"`
 }
 
 func request(method, url, token string, body []byte) ([]byte, error) {

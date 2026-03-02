@@ -9,13 +9,14 @@ import (
 )
 
 func Usage(bin string) {
-	fmt.Printf("Usage: %s [major|minor|patch] [--force] [--verbose|-v|-vv]\n\n", filepath.Base(bin))
+	fmt.Printf("Usage: %s [major|minor|patch] [--force] [--no-follow] [--verbose|-v|-vv]\n\n", filepath.Base(bin))
 	fmt.Println("Arguments:")
 	fmt.Println("  major|minor|patch   Optional release type. If omitted, it will be detected")
 	fmt.Println("                      from git diff (like your Laravel command). When provided,")
 	fmt.Println("                      the confirmation prompt is skipped.")
 	fmt.Println("Options:")
 	fmt.Println("  --force             Don't ask confirmation before creating the tag.")
+	fmt.Println("  --no-follow         Don't check the GitHub Actions workflow after publishing.")
 	fmt.Println("  --verbose, -v       Enable verbose output.")
 	fmt.Println("  -vv                 Enable very verbose output (trace-level).")
 }
@@ -29,6 +30,9 @@ func ParseArgs(cfg *shared.Config, args []string, bin string) error {
 			args = args[1:]
 		case "--force":
 			cfg.Force = true
+			args = args[1:]
+		case "--no-follow":
+			cfg.Follow = false
 			args = args[1:]
 		case "--verbose":
 			if cfg.Verbosity < 1 {

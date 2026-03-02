@@ -4,6 +4,7 @@ type Config struct {
 	Type      string
 	TypeSet   bool
 	Force     bool
+	Follow    bool
 	Verbosity int
 	BaseDir   string
 	Token     string
@@ -14,4 +15,5 @@ type Config struct {
 	NewTag    string
 	Changes   string
 	Release   string
+	Published string
 }

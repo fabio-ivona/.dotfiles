@@ -12,6 +12,7 @@ const (
 	colorBold   = "\033[1m"
 	colorDim    = "\033[2m"
 	colorCyan   = "\033[36m"
+	colorSky    = "\033[94m"
 	colorYellow = "\033[33m"
 	colorGreen  = "\033[32m"
 	colorRed    = "\033[91m"
@@ -181,6 +182,30 @@ func AccentText(text string) string {
 		return text
 	}
 	return colorSteel + text + colorReset
+}
+
+func WorkflowStatus(status string) string {
+	if !enableColor {
+		return status
+	}
+
+	var color string
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "queued":
+		color = colorGray
+	case "running":
+		color = colorSky
+	case "completed":
+		color = colorGreen
+	case "skipped":
+		color = colorOrange
+	case "failed":
+		color = colorRed
+	default:
+		return status
+	}
+
+	return color + status + colorReset
 }
 
 func printLine(stream *os.File, level, levelColor, msg string) {
