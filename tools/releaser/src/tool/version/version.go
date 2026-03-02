@@ -10,7 +10,7 @@ import (
 
 func Bump(cfg *shared.Config) error {
 	if !cfg.TypeSet {
-		answer := output.Ask(fmt.Sprintf("Please confirm auto-detected release type [major|minor|patch] (default: %s): ", defaultType(cfg.Type)))
+		answer := output.Ask(fmt.Sprintf("Please confirm auto-detected release type [major|minor|patch] (detected: %s): ", output.SemverLabel(defaultType(cfg.Type))))
 		if answer != "" {
 			cfg.Type = answer
 		}
