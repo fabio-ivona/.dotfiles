@@ -129,6 +129,7 @@ func FollowReleaseWorkflow(cfg *shared.Config) error {
 func followWorkflowRunUntilTerminal(cfg *shared.Config, run workflowRun) error {
 	previous := ""
 	spinnerIndex := 0
+	runningPrefix := ""
 	enterCh := startEnterListener()
 	if enterCh != nil {
 		output.Continue("Press Enter to stop following.")
@@ -151,45 +152,67 @@ func followWorkflowRunUntilTerminal(cfg *shared.Config, run workflowRun) error {
 
 		current := normalizeWorkflowStatus(currentRun.Status, currentRun.Conclusion)
 		if current != previous {
-			message := "Workflow status: " + output.WorkflowStatus(current) + " " + statusSymbol(current)
-			if previous != "" {
-				message = "Workflow status: " + output.WorkflowStatus(previous) + " -> " + output.WorkflowStatus(current) + " " + statusSymbol(current)
-			}
-
-			if current == "completed" {
-				output.Success(message)
-			} else if current == "failed" {
-				output.Error(message)
-			} else if current == "skipped" {
-				output.Warn(message)
+			if current == "running" {
+				runningPrefix = "Workflow status: " + output.WorkflowStatus(current) + " "
+				output.Info(runningPrefix + spinnerFrame(spinnerIndex))
+				spinnerIndex++
 			} else {
-				output.Info(message)
+				message := "Workflow status: " + output.WorkflowStatus(current) + " " + statusSymbol(current)
+				if previous != "" {
+					message = "Workflow status: " + output.WorkflowStatus(previous) + " -> " + output.WorkflowStatus(current) + " " + statusSymbol(current)
+				}
+
+				if current == "completed" {
+					output.Success(message)
+				} else if current == "failed" {
+					output.Error(message)
+				} else if current == "skipped" {
+					output.Warn(message)
+				} else {
+					output.Info(message)
+				}
 			}
 			previous = current
-		} else if current == "running" {
-			output.Info("Workflow status: " + output.WorkflowStatus(current) + " " + spinnerFrame(spinnerIndex))
-			spinnerIndex++
 		}
 
 		if current == "completed" || current == "skipped" || current == "failed" {
 			return nil
 		}
 
-		if enterCh == nil {
-			time.Sleep(5 * time.Second)
-		} else {
+		if current == "running" {
+			until := time.Now().Add(5 * time.Second)
+			for time.Now().Before(until) {
+				if enterCh != nil {
+					select {
+					case <-enterCh:
+						output.Warn("Stopped following workflow status.")
+						return nil
+					default:
+					}
+				}
+
+				output.ReplaceLastLine(runningPrefix + spinnerFrame(spinnerIndex))
+				spinnerIndex++
+				time.Sleep(120 * time.Millisecond)
+			}
+			continue
+		}
+
+		if enterCh != nil {
 			select {
 			case <-enterCh:
 				output.Warn("Stopped following workflow status.")
 				return nil
 			case <-time.After(5 * time.Second):
 			}
+			continue
 		}
+		time.Sleep(5 * time.Second)
 	}
 }
 
 func spinnerFrame(index int) string {
-	frames := []string{"|", "/", "-", `\`}
+	frames := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 	return frames[index%len(frames)]
 }
 
