@@ -9,4 +9,13 @@ sudo snap install --classic telegram-desktop
 echo '----------------------'
 echo '---> DONE'
 
+#Agents skills
+echo ''
+echo ''
+echo 'Agents skill sharing'
+echo '----------------------'
+rm -f $HOME/.agents
+ln -s $HOME/.dotfiles/agents $HOME/.agents
+echo '---> DONE'
+
 
