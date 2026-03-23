@@ -27,6 +27,7 @@ func ParseArgs(cfg *shared.Config, args []string, bin string) error {
 		case "major", "minor", "patch":
 			cfg.Type = args[0]
 			cfg.TypeSet = true
+			cfg.Force = true
 			args = args[1:]
 		case "--force":
 			cfg.Force = true

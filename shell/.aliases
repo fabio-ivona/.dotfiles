@@ -9,7 +9,7 @@ alias sail="vendor/bin/sail"
 alias phpstorm="nohup phpstorm . &"
 
 # Dock
-alias dock="php dock"
+# alias dock="php dock"
 
 # Docker 
 alias aartisan="docker compose run --rm composer php artisan"
