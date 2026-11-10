@@ -1,0 +1,125 @@
+---
+name: sentry-cli-sourcemap
+version: 0.49.0
+description: Manage sourcemaps
+requires:
+  bins: ["sentry"]
+  auth: true
+---
+
+# Sourcemap Commands
+
+Manage sourcemaps
+
+### `sentry sourcemap inject <directory>`
+
+Inject debug IDs into JavaScript files and sourcemaps
+
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `<directory>` | Directory to scan for JS + sourcemap pairs |
+
+**Flags:**
+- `--ext <value> - Comma-separated file extensions to process (default: .js,.cjs,.mjs)`
+- `--ignore <value> - Comma-separated glob patterns to exclude (gitignore-style)`
+- `--ignore-file <value> - Path to a file with gitignore-style patterns to exclude`
+- `--dry-run - Show what would be modified without writing`
+- `--allow-empty - Exit successfully when no JS + sourcemap pairs are found (default: error out to catch silent build misconfigurations)`
+
+**Examples:**
+
+```bash
+# Inject debug IDs into all JS files in dist/
+sentry sourcemap inject ./dist
+
+# Preview changes without writing
+sentry sourcemap inject ./dist --dry-run
+
+# Only process specific extensions
+sentry sourcemap inject ./build --ext .js,.mjs
+
+# Allow a directory with no sourcemaps
+sentry sourcemap inject ./maybe-empty --allow-empty
+```
+
+### `sentry sourcemap upload <directory>`
+
+Upload sourcemaps to Sentry
+
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `<directory>` | Directory containing sourcemaps, or a glob like 'dist/**' |
+
+**Flags:**
+- `--release <value> - Release version to associate with the upload`
+- `--dist <value> - Distribution identifier to disambiguate builds within a release`
+- `--url-prefix <value> - URL prefix for uploaded files - (default: "~/")`
+- `--ext <value> - Comma-separated file extensions to process (default: .js,.cjs,.mjs)`
+- `--ignore <value> - Comma-separated glob patterns to exclude (gitignore-style)`
+- `--ignore-file <value> - Path to a file with gitignore-style patterns to exclude`
+- `--strip-prefix <value> - Strip a prefix from uploaded file paths (e.g. 'build/')`
+- `--strip-common-prefix - Automatically strip the longest common path prefix from all files`
+- `--no-rewrite - Upload files as-is without injecting debug IDs`
+- `--allow-empty - Exit successfully when no JS + sourcemap pairs are found (default: error out to catch silent build misconfigurations)`
+
+**Examples:**
+
+```bash
+# Upload sourcemaps from dist/
+sentry sourcemap upload ./dist
+
+# Upload only the files a glob matches
+sentry sourcemap upload '.next/static/**'
+
+# Associate with a release
+sentry sourcemap upload ./dist --release 1.0.0
+
+# Set a custom URL prefix
+sentry sourcemap upload ./dist --url-prefix '~/static/js/'
+
+# Don't fail when no sourcemaps are found
+sentry sourcemap upload ./dist --allow-empty
+
+# Set a release and distribution
+sentry sourcemap upload ./dist --release 1.0.0 --dist 12345
+
+# Upload without rewriting sourcemaps
+sentry sourcemap upload ./dist --no-rewrite
+
+# Only upload some extensions
+sentry sourcemap upload ./dist --ext .js,.mjs
+```
+
+### `sentry sourcemap resolve <directory>`
+
+Resolve and report sourcemap linkage for JavaScript files
+
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `<directory>` | Directory to scan for JS files |
+
+**Flags:**
+- `--ext <value> - Comma-separated file extensions to process (default: .js,.cjs,.mjs)`
+- `--ignore <value> - Comma-separated glob patterns to exclude (gitignore-style)`
+- `--ignore-file <value> - Path to a file with gitignore-style patterns to exclude`
+
+**Examples:**
+
+```bash
+# Report how each JS file's sourcemap resolves and whether a debug ID is injected
+sentry sourcemap resolve ./dist
+
+# Output as JSON
+sentry sourcemap resolve ./dist --json
+
+# Only scan some extensions
+sentry sourcemap resolve ./build --ext .js,.mjs
+```
+
+All commands also support `--json`, `--fields`, `--help`, `--log-level`, and `--verbose` flags.

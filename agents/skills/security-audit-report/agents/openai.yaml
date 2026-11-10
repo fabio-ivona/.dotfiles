@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit sicurezza, Markdown e PDF"
+  short_description: "Analisi di vulnerabilità e bug, report Markdown e PDF"
+  default_prompt: "Usa $security-audit-report per analizzare questo progetto, verificare vulnerabilità e bug e preparare un report completo in Markdown e PDF condivisibile."

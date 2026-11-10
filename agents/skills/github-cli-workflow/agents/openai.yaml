@@ -1,0 +1,3 @@
+interface:
+  display_name: "GitHub CLI Workflow"
+  short_description: "Operate GitHub reliably with gh"

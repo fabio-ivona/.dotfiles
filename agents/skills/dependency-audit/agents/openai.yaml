@@ -1,0 +1,3 @@
+interface:
+  display_name: "Dependency Audit"
+  short_description: "Audit Composer and npm dependencies with Dock support"

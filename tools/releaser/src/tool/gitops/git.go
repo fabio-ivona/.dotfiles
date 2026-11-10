@@ -1,9 +1,11 @@
 package gitops
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -70,9 +72,45 @@ func GetRepository(cfg *shared.Config) error {
 }
 
 func Run(dir string, args ...string) (string, error) {
+	return run(dir, nil, "", args...)
+}
+
+// RunRemote retries GitHub SSH authentication failures using the API token.
+// Configuration and credentials apply only to the retried child process.
+func RunRemote(cfg *shared.Config, args ...string) (string, error) {
+	out, err := Run(cfg.BaseDir, args...)
+	if err == nil || cfg.Token == "" || !strings.Contains(strings.ToLower(out), "permission denied (publickey)") {
+		return out, err
+	}
+
+	output.Info("SSH key authentication failed; retrying GitHub access over HTTPS with GITHUB_TOKEN.")
+	auth := "AUTHORIZATION: basic " + base64.StdEncoding.EncodeToString([]byte("x-access-token:"+cfg.Token))
+	env := os.Environ()
+	// Append to any inherited command-scoped Git configuration.
+	count, _ := strconv.Atoi(os.Getenv("GIT_CONFIG_COUNT"))
+	settings := [][2]string{
+		{"url.https://github.com/.insteadOf", "git@github.com:"},
+		{"url.https://github.com/.insteadOf", "ssh://git@github.com/"},
+		{"http.https://github.com/.extraheader", ""},
+		{"http.https://github.com/.extraheader", auth},
+		{"credential.helper", ""},
+	}
+	for i, setting := range settings {
+		env = append(env, fmt.Sprintf("GIT_CONFIG_KEY_%d=%s", count+i, setting[0]), fmt.Sprintf("GIT_CONFIG_VALUE_%d=%s", count+i, setting[1]))
+	}
+	env = append(env, fmt.Sprintf("GIT_CONFIG_COUNT=%d", count+len(settings)), "GIT_TERMINAL_PROMPT=0")
+	return run(cfg.BaseDir, env, cfg.Token, args...)
+}
+
+func run(dir string, env []string, token string, args ...string) (string, error) {
 	output.VeryVerbose("git -C " + dir + " " + strings.Join(args, " "))
 	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
+	cmd.Env = env
 	out, err := cmd.CombinedOutput()
+	if token != "" {
+		redacted := strings.ReplaceAll(string(out), token, "[REDACTED]")
+		out = []byte(strings.ReplaceAll(redacted, base64.StdEncoding.EncodeToString([]byte("x-access-token:"+token)), "[REDACTED]"))
+	}
 	outputText := strings.TrimSpace(string(out))
 	if err != nil {
 		if outputText == "" {
@@ -102,8 +140,8 @@ func TagExists(dir, tag string) (bool, error) {
 	return false, fmt.Errorf("failed to check local tag %s: %w: %s", tag, err, outputText)
 }
 
-func RemoteTagExists(dir, tag string) (bool, error) {
-	out, err := Run(dir, "ls-remote", "--tags", "origin", "refs/tags/"+tag)
+func RemoteTagExists(cfg *shared.Config, tag string) (bool, error) {
+	out, err := RunRemote(cfg, "ls-remote", "--tags", "origin", "refs/tags/"+tag)
 	if err != nil {
 		return false, err
 	}

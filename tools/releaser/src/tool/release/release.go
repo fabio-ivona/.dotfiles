@@ -65,13 +65,13 @@ func CreateTag(cfg *shared.Config) error {
 
 	if shouldPushCommits {
 		output.Info("Pushing commits...")
-		if _, err := gitops.Run(cfg.BaseDir, "push"); err != nil {
+		if _, err := gitops.RunRemote(cfg, "push"); err != nil {
 			output.Warn("Failed to push commits")
 			return err
 		}
 	}
 
-	remoteTagExists, err := gitops.RemoteTagExists(cfg.BaseDir, cfg.NewTag)
+	remoteTagExists, err := gitops.RemoteTagExists(cfg, cfg.NewTag)
 	if err != nil {
 		output.Warn("Failed to check if tag already exists on origin")
 		return err
@@ -82,7 +82,7 @@ func CreateTag(cfg *shared.Config) error {
 	}
 
 	output.Info("Pushing tag " + cfg.NewTag + "...")
-	if _, err := gitops.Run(cfg.BaseDir, "push", "origin", cfg.NewTag); err != nil {
+	if _, err := gitops.RunRemote(cfg, "push", "origin", cfg.NewTag); err != nil {
 		output.Warn("Failed to push tag " + cfg.NewTag)
 		return err
 	}

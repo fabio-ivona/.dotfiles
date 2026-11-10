@@ -7,7 +7,7 @@ description: Use when working with GitHub issues or pull requests via the gh CLI
 
 ## Overview
 
-Use `gh` to fetch issues and PRs from a GitHub repo: list, search, and read details for a specific number. Assume `gh` is installed and authenticated; warn the user if it is not.
+Use `gh` to fetch issues and PRs from a GitHub repo: list, search, and read details for a specific number. Assume `gh` is installed and authenticated; use it outside sandbox; warn the user if it is not.
 
 ## Quick flow
 
